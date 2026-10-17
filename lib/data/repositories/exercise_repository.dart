@@ -89,6 +89,15 @@ class ExerciseRepository {
     return saved.id;
   });
 
+  /// In the order of [ids], e.g. as picked.
+  Future<List<Exercise>> exercisesByIds(List<int> ids) async {
+    final rows = await (_database.select(
+      _database.exercises,
+    )..where((exercise) => exercise.id.isIn(ids))).get();
+    final byId = {for (final exercise in rows) exercise.id: exercise};
+    return [for (final id in ids) byId[id]!];
+  }
+
   Stream<Uint8List?> watchThumbnail(int exerciseId) =>
       _thumbnailQuery(exerciseId).watchSingleOrNull().map((row) => row?.image);
 

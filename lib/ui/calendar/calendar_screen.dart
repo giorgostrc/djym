@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:loggym/data/repositories/plan_repository.dart';
 import 'package:loggym/data/repositories/settings_repository.dart';
 import 'package:loggym/data/repositories/workout_session_repository.dart';
 import 'package:loggym/domain/unit_system.dart';
 import 'package:loggym/routing/routes.dart';
 import 'package:loggym/ui/calendar/selected_day_provider.dart';
+import 'package:loggym/ui/session/start_workout.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -20,16 +22,29 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   DateTime get _focusedMonth => DateTime(_focusedDay.year, _focusedDay.month);
 
+  Future<({int? planId})?> _chooseStart() async {
+    final plans = await ref.read(planRepositoryProvider).loadPlans();
+    if (!mounted) return null;
+    return chooseWorkoutStart(context, plans);
+  }
+
   Future<void> _startWorkout() async {
-    final id = await ref.read(workoutSessionRepositoryProvider).startSession();
-    if (mounted) await context.push(Routes.session(id, pickExercises: true));
+    final choice = await _chooseStart();
+    if (choice == null || !mounted) return;
+    await startWorkout(context, ref, planId: choice.planId);
   }
 
   Future<void> _logPastWorkout(DateTime day) async {
+    final choice = await _chooseStart();
+    if (choice == null) return;
     final id = await ref
         .read(workoutSessionRepositoryProvider)
-        .logPastSession(day);
-    if (mounted) await context.push(Routes.session(id, pickExercises: true));
+        .logPastSession(day, planId: choice.planId);
+    if (mounted) {
+      await context.push(
+        Routes.session(id, pickExercises: choice.planId == null),
+      );
+    }
   }
 
   @override

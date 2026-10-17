@@ -6,10 +6,14 @@ abstract final class Routes {
   static const workoutSession = '/session/:id';
   static const newExercise = '/exercises/new';
   static const editExercise = '/exercises/:id';
+  static const newPlan = '/plans/new';
+  static const editPlan = '/plans/:id';
 
   static String exercise(int id) => '/exercises/$id';
 
   static String sessionDetail(int id) => '/calendar/sessions/$id';
+
+  static String plan(int id) => '/plans/$id';
 
   static String session(int id, {bool pickExercises = false}) => Uri(
     path: '/session/$id',

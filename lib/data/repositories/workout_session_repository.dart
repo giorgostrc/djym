@@ -130,17 +130,21 @@ class WorkoutSessionRepository {
 
   /// A workout logged after the fact: it starts at 18:00 on [day], lasts an
   /// hour until edited, and never becomes the active session.
-  Future<int> logPastSession(DateTime day) {
-    final startedAt = DateTime(day.year, day.month, day.day, 18);
-    return _database
-        .into(_sessions)
-        .insert(
-          WorkoutSessionsCompanion.insert(
-            startedAt: startedAt,
-            finishedAt: Value(startedAt.add(const Duration(hours: 1))),
-          ),
-        );
-  }
+  Future<int> logPastSession(DateTime day, {int? planId}) =>
+      _database.transaction(() async {
+        final startedAt = DateTime(day.year, day.month, day.day, 18);
+        final id = await _database
+            .into(_sessions)
+            .insert(
+              WorkoutSessionsCompanion.insert(
+                startedAt: startedAt,
+                finishedAt: Value(startedAt.add(const Duration(hours: 1))),
+                planId: Value(planId),
+              ),
+            );
+        if (planId != null) await _addPlanSets(id, planId);
+        return id;
+      });
 
   Future<void> updateSessionTimes(
     int sessionId, {
@@ -183,13 +187,35 @@ class WorkoutSessionRepository {
   )..where((session) => session.id.equals(sessionId))).watchSingleOrNull();
 
   /// Only one session can be active; starting again returns that one.
-  Future<int> startSession() => _database.transaction(() async {
+  /// A [planId] fills the session with the plan's exercises, each with its
+  /// target number of empty sets; the plan itself is never changed.
+  Future<int> startSession({int? planId}) => _database.transaction(() async {
     final active = await _activeSessionQuery().getSingleOrNull();
     if (active != null) return active.id;
-    return _database
+    final id = await _database
         .into(_sessions)
-        .insert(WorkoutSessionsCompanion.insert(startedAt: DateTime.now()));
+        .insert(
+          WorkoutSessionsCompanion.insert(
+            startedAt: DateTime.now(),
+            planId: Value(planId),
+          ),
+        );
+    if (planId != null) await _addPlanSets(id, planId);
+    return id;
   });
+
+  Future<void> _addPlanSets(int sessionId, int planId) async {
+    final items =
+        await (_database.select(_database.planExercises)
+              ..where((item) => item.planId.equals(planId))
+              ..orderBy([(item) => OrderingTerm.asc(item.position)]))
+            .get();
+    for (final item in items) {
+      for (var set = 0; set < item.targetSets; set++) {
+        await addSet(sessionId, item.exerciseId);
+      }
+    }
+  }
 
   Stream<List<SessionExercise>> watchSessionExercises(int sessionId) =>
       _sessionExercisesQuery(sessionId).watch().map(_groupByExercise);

@@ -77,6 +77,11 @@ class GymSubscriptions extends Table {
 
 class WorkoutSessions extends Table {
   IntColumn get id => integer().autoIncrement()();
+  IntColumn get planId => integer().nullable().references(
+    WorkoutPlans,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
   DateTimeColumn get startedAt => dateTime()();
   DateTimeColumn get finishedAt => dateTime().nullable()();
   TextColumn get notes => text().nullable()();
