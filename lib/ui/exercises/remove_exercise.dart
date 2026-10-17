@@ -7,6 +7,7 @@ Future<void> removeExerciseWithUndo({
   required ExerciseWithMuscles entry,
 }) async {
   final title = entry.exercise.title;
+  final thumbnail = await repository.thumbnail(entry.exercise.id);
   final removal = await repository.removeExercise(entry.exercise.id);
 
   messenger
@@ -20,7 +21,8 @@ Future<void> removeExerciseWithUndo({
         }),
         action: SnackBarAction(
           label: 'Undo',
-          onPressed: () => repository.restoreExercise(entry),
+          onPressed: () =>
+              repository.restoreExercise(entry, thumbnail: thumbnail),
         ),
       ),
     );

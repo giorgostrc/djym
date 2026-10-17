@@ -12,12 +12,9 @@ import 'package:loggym/app.dart';
 import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/database/database_provider.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/data/services/thumbnail_store.dart';
 import 'package:loggym/data/services/wger_client.dart';
 import 'package:loggym/domain/tracking_type.dart';
 import 'package:loggym/ui/exercises/exercise_form_screen.dart';
-
-import '../helpers/in_memory_thumbnail_store.dart';
 
 class _FakeImagePicker implements ImagePicker {
   ImageSource? requestedSource;
@@ -32,7 +29,7 @@ class _FakeImagePicker implements ImagePicker {
     bool requestFullMetadata = true,
   }) async {
     requestedSource = source;
-    return XFile.fromData(Uint8List.fromList([1, 2, 3]));
+    return XFile.fromData(Uint8List.fromList([7, 7, 7]));
   }
 
   @override
@@ -44,12 +41,10 @@ void main() {
     'test/fixtures/wger_search_bench_press.json',
   ).readAsBytesSync();
   late AppDatabase database;
-  late InMemoryThumbnailStore thumbnails;
   late _FakeImagePicker picker;
 
   setUp(() {
     database = AppDatabase(NativeDatabase.memory());
-    thumbnails = InMemoryThumbnailStore();
     picker = _FakeImagePicker();
   });
 
@@ -60,7 +55,6 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(database),
-          thumbnailStoreProvider.overrideWith((ref) async => thumbnails),
           imagePickerProvider.overrideWithValue(picker),
           wgerClientProvider.overrideWithValue(
             WgerClient(
@@ -111,19 +105,19 @@ void main() {
     final saved = await database.select(database.exercises).getSingle();
     expect(picker.requestedSource, ImageSource.camera);
     expect(saved.externalId, startsWith('wger:'));
-    expect(saved.thumbnailPath, startsWith('thumbnails/user-'));
+    expect(await ExerciseRepository(database).thumbnail(saved.id), [7, 7, 7]);
 
     await unmountApp(tester);
   });
 
-  testWidgets('removes the photo of an existing exercise and its file', (
+  testWidgets('removes the photo of an existing exercise', (
     tester,
   ) async {
     await ExerciseRepository(database).saveExercise(
       title: 'Dips',
       trackingType: TrackingType.reps,
       muscleIds: const [],
-      thumbnailPath: 'thumbnails/dips.png',
+      thumbnail: Uint8List.fromList([1, 2, 3]),
     );
     await openExercisesTab(tester);
     await tester.tap(find.text('Dips'));
@@ -134,8 +128,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final saved = await database.select(database.exercises).getSingle();
-    expect(saved.thumbnailPath, isNull);
-    expect(thumbnails.deleted, ['thumbnails/dips.png']);
+    expect(await ExerciseRepository(database).thumbnail(saved.id), isNull);
 
     await unmountApp(tester);
   });

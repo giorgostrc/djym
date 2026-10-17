@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:loggym/data/database/app_database.dart';
@@ -128,7 +130,7 @@ void main() {
       trackingType: TrackingType.weightReps,
       muscleIds: [muscleIds['Chest']!],
       externalId: 'wger:bench-uuid',
-      thumbnailPath: 'thumbnails/b.png',
+      thumbnail: Uint8List.fromList([1, 2, 3]),
     );
     final [bench] = await repository.watchExercises().first;
 
@@ -142,7 +144,7 @@ void main() {
 
     expect(edited.exercise.title, 'Bench press');
     expect(edited.exercise.externalId, 'wger:bench-uuid');
-    expect(edited.exercise.thumbnailPath, isNull);
+    expect(await repository.thumbnail(edited.exercise.id), isNull);
   });
 
   test('saving an archived wger exercise again restores it', () async {
@@ -169,5 +171,22 @@ void main() {
 
     expect(await saveBench(), id);
     expect(await exerciseTitles(), ['Bench Press']);
+  });
+
+  test('deleting drops the photo and undo puts it back', () async {
+    final id = await repository.saveExercise(
+      title: 'Squat',
+      trackingType: TrackingType.weightReps,
+      muscleIds: const [],
+      thumbnail: Uint8List.fromList([1, 2, 3]),
+    );
+    final [squat] = await repository.watchExercises().first;
+    final photo = await repository.thumbnail(id);
+
+    await repository.removeExercise(id);
+    expect(await database.select(database.exerciseThumbnails).get(), isEmpty);
+
+    await repository.restoreExercise(squat, thumbnail: photo);
+    expect(await repository.thumbnail(id), [1, 2, 3]);
   });
 }

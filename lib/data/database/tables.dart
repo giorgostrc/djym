@@ -10,13 +10,22 @@ class Exercises extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get title => text().withLength(min: 1, max: 120)();
   TextColumn get formGuidance => text().nullable()();
-  TextColumn get thumbnailPath => text().nullable()();
   TextColumn get externalId => text().nullable().unique()();
   TextColumn get trackingType => textEnum<TrackingType>().withDefault(
     Constant(TrackingType.weightReps.name),
   )();
   DateTimeColumn get archivedAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+/// Kept apart from [Exercises] so lists of exercises never load images.
+class ExerciseThumbnails extends Table {
+  IntColumn get exerciseId =>
+      integer().references(Exercises, #id, onDelete: KeyAction.cascade)();
+  BlobColumn get image => blob()();
+
+  @override
+  Set<Column> get primaryKey => {exerciseId};
 }
 
 class Muscles extends Table {
@@ -103,6 +112,9 @@ class SettingsTable extends Table {
   TextColumn get unitSystem => textEnum<UnitSystem>().withDefault(
     Constant(UnitSystem.metric.name),
   )();
+  TextColumn get currencyCode =>
+      text().withLength(min: 3, max: 3).withDefault(const Constant('EUR'))();
+  DateTimeColumn get lastBackupAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};

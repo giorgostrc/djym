@@ -70,3 +70,4 @@ Commit `drift_schemas/`, `*.steps.dart` and `test/drift/`; only `*.g.dart` is ig
 - Weights are stored in kilograms and converted for display.
 - Money is stored as integer cents.
 - A single `settings` row is seeded on database creation, so the backup file also carries user preferences.
+- Exercise photos are stored as JPEG/PNG blobs in `exercise_thumbnails` (one row per exercise, user photos capped at 256 px), so a backup is the single database file.

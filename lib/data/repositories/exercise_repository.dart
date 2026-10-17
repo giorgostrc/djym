@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/database/database_provider.dart';
 import 'package:loggym/domain/tracking_type.dart';
@@ -55,15 +56,15 @@ class ExerciseRepository {
   }
 
   /// Saving with the wger id of an archived exercise brings that exercise
-  /// back instead of creating a duplicate. A null [thumbnailPath] removes the
-  /// thumbnail.
+  /// back instead of creating a duplicate. A null [thumbnail] removes the
+  /// photo.
   Future<int> saveExercise({
     required String title,
     required TrackingType trackingType,
     required List<int> muscleIds,
     String? formGuidance,
     String? externalId,
-    String? thumbnailPath,
+    Uint8List? thumbnail,
     int? id,
   }) => _database.transaction(() async {
     final row = ExercisesCompanion(
@@ -72,7 +73,6 @@ class ExerciseRepository {
       trackingType: Value(trackingType),
       formGuidance: Value(formGuidance),
       externalId: Value.absentIfNull(externalId),
-      thumbnailPath: Value(thumbnailPath),
       archivedAt: const Value(null),
     );
     final saved = await _database
@@ -85,8 +85,37 @@ class ExerciseRepository {
           ]),
         );
     await _replaceMuscles(saved.id, muscleIds);
+    await _writeThumbnail(saved.id, thumbnail);
     return saved.id;
   });
+
+  Stream<Uint8List?> watchThumbnail(int exerciseId) =>
+      _thumbnailQuery(exerciseId).watchSingleOrNull().map((row) => row?.image);
+
+  Future<Uint8List?> thumbnail(int exerciseId) async =>
+      (await _thumbnailQuery(exerciseId).getSingleOrNull())?.image;
+
+  SimpleSelectStatement<$ExerciseThumbnailsTable, ExerciseThumbnail>
+  _thumbnailQuery(int exerciseId) => _database.select(
+    _database.exerciseThumbnails,
+  )..where((row) => row.exerciseId.equals(exerciseId));
+
+  Future<void> _writeThumbnail(int exerciseId, Uint8List? image) async {
+    if (image == null) {
+      await (_database.delete(
+        _database.exerciseThumbnails,
+      )..where((row) => row.exerciseId.equals(exerciseId))).go();
+      return;
+    }
+    await _database
+        .into(_database.exerciseThumbnails)
+        .insertOnConflictUpdate(
+          ExerciseThumbnailsCompanion.insert(
+            exerciseId: Value(exerciseId),
+            image: image,
+          ),
+        );
+  }
 
   Future<ExerciseRemoval> removeExercise(int id) =>
       _database.transaction(() async {
@@ -102,20 +131,26 @@ class ExerciseRepository {
         return ExerciseRemoval.deleted;
       });
 
-  Future<void> restoreExercise(ExerciseWithMuscles removed) =>
-      _database.transaction(() async {
-        await _database
-            .into(_database.exercises)
-            .insertOnConflictUpdate(
-              removed.exercise
-                  .toCompanion(false)
-                  .copyWith(archivedAt: const Value(null)),
-            );
-        await _replaceMuscles(
-          removed.exercise.id,
-          removed.muscles.map((muscle) => muscle.id).toList(),
+  /// A deleted exercise loses its photo with it, so undo passes it back.
+  Future<void> restoreExercise(
+    ExerciseWithMuscles removed, {
+    Uint8List? thumbnail,
+  }) => _database.transaction(() async {
+    await _database
+        .into(_database.exercises)
+        .insertOnConflictUpdate(
+          removed.exercise
+              .toCompanion(false)
+              .copyWith(archivedAt: const Value(null)),
         );
-      });
+    await _replaceMuscles(
+      removed.exercise.id,
+      removed.muscles.map((muscle) => muscle.id).toList(),
+    );
+    if (thumbnail != null) {
+      await _writeThumbnail(removed.exercise.id, thumbnail);
+    }
+  });
 
   Future<void> _replaceMuscles(int exerciseId, List<int> muscleIds) async {
     await (_database.delete(
@@ -155,6 +190,12 @@ final exerciseRepositoryProvider = Provider<ExerciseRepository>(
 final exercisesProvider = StreamProvider<List<ExerciseWithMuscles>>(
   (ref) => ref.watch(exerciseRepositoryProvider).watchExercises(),
 );
+
+final StreamProviderFamily<Uint8List?, int> exerciseThumbnailProvider =
+    StreamProvider.family<Uint8List?, int>(
+      (ref, exerciseId) =>
+          ref.watch(exerciseRepositoryProvider).watchThumbnail(exerciseId),
+    );
 
 final musclesProvider = StreamProvider<List<Muscle>>(
   (ref) => ref.watch(exerciseRepositoryProvider).watchMuscles(),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/data/services/thumbnail_store.dart';
 import 'package:loggym/data/services/wger_client.dart';
 import 'package:loggym/domain/tracking_type.dart';
 import 'package:loggym/ui/exercises/remove_exercise.dart';
@@ -70,12 +70,17 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
     String title,
     String guidance,
     List<int> muscleIds,
-    Future<String?> thumbnail,
+    Future<Uint8List?> thumbnail,
   })
   _beforePrefill;
-  late Future<String?> _thumbnail = Future.value(
-    widget.existing?.exercise.thumbnailPath,
-  );
+
+  /// The photo as it will be saved; a future because existing photos and
+  /// wger downloads arrive asynchronously.
+  late Future<Uint8List?> _thumbnail = switch (widget.existing) {
+    final existing? =>
+      ref.read(exerciseRepositoryProvider).thumbnail(existing.exercise.id),
+    null => Future.value(),
+  };
 
   bool get _suggestsFromWger => widget.existing == null && _prefill == null;
 
@@ -178,30 +183,22 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
               source: choice == _PhotoChoice.camera
                   ? ImageSource.camera
                   : ImageSource.gallery,
-              maxWidth: 400,
-              maxHeight: 400,
-              imageQuality: 85,
+              maxWidth: 256,
+              maxHeight: 256,
+              imageQuality: 80,
             );
         if (picked == null) return;
-        _thumbnail = _savePickedPhoto(picked);
+        _thumbnail = picked.readAsBytes();
     }
     _markDirty();
   }
 
-  Future<String?> _savePickedPhoto(XFile picked) async {
-    final store = await ref.read(thumbnailStoreProvider.future);
-    final name = 'user-${DateTime.now().microsecondsSinceEpoch}.jpg';
-    return store.save(name, await picked.readAsBytes());
-  }
-
   /// A missing thumbnail must never block saving the exercise.
-  Future<String?> _downloadThumbnail(WgerExercise source) async {
+  Future<Uint8List?> _downloadThumbnail(WgerExercise source) async {
     final url = source.thumbnailUrl;
     if (url == null) return null;
     try {
-      final bytes = await ref.read(wgerClientProvider).download(url);
-      final store = await ref.read(thumbnailStoreProvider.future);
-      return await store.save('wger-${source.uuid}.png', bytes);
+      return await ref.read(wgerClientProvider).download(url);
     } on Exception {
       return null;
     }
@@ -211,7 +208,7 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
     if (!_formKey.currentState!.validate()) return;
 
     final guidance = _formGuidance.text.trim();
-    final thumbnailPath = await _thumbnail;
+    final thumbnail = await _thumbnail;
     final id = await ref
         .read(exerciseRepositoryProvider)
         .saveExercise(
@@ -221,12 +218,8 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
           formGuidance: guidance.isEmpty ? null : guidance,
           muscleIds: _muscleIds,
           externalId: _prefill?.externalId,
-          thumbnailPath: thumbnailPath,
+          thumbnail: thumbnail,
         );
-    final previous = widget.existing?.exercise.thumbnailPath;
-    if (previous != null && previous != thumbnailPath) {
-      await (await ref.read(thumbnailStoreProvider.future)).delete(previous);
-    }
     if (mounted) context.pop(id);
   }
 
@@ -389,16 +382,15 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
   }
 }
 
-class _PhotoField extends ConsumerWidget {
+class _PhotoField extends StatelessWidget {
   const _PhotoField({required this.thumbnail, required this.onTap});
 
-  final Future<String?> thumbnail;
+  final Future<Uint8List?> thumbnail;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final store = ref.watch(thumbnailStoreProvider).value;
     const size = 96.0;
 
     return Center(
@@ -418,7 +410,7 @@ class _PhotoField extends ConsumerWidget {
                     child: FutureBuilder(
                       future: thumbnail,
                       builder: (context, snapshot) {
-                        final path = snapshot.data;
+                        final image = snapshot.data;
                         if (snapshot.connectionState != ConnectionState.done) {
                           return const Center(
                             child: CircularProgressIndicator(),
@@ -428,9 +420,9 @@ class _PhotoField extends ConsumerWidget {
                           Icons.add_a_photo_outlined,
                           color: colors.onSurfaceVariant,
                         );
-                        if (path == null || store == null) return placeholder;
-                        return Image.file(
-                          store.file(path),
+                        if (image == null) return placeholder;
+                        return Image.memory(
+                          image,
                           fit: BoxFit.cover,
                           errorBuilder: (_, _, _) => placeholder,
                         );

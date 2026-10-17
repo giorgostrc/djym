@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 import 'package:loggym/data/database/app_database.steps.dart';
 import 'package:loggym/data/database/tables.dart';
@@ -27,6 +29,7 @@ const _muscleNames = [
 @DriftDatabase(
   tables: [
     Exercises,
+    ExerciseThumbnails,
     Muscles,
     ExerciseMuscles,
     WorkoutPlans,
@@ -38,10 +41,16 @@ const _muscleNames = [
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase(super.e);
+  AppDatabase(super.e, {this.legacyFilesDirectory});
+
+  /// Before schema v4, photos were files under this directory; the upgrade
+  /// moves them into [ExerciseThumbnails].
+  final Future<Directory> Function()? legacyFilesDirectory;
+
+  static const currentSchemaVersion = 4;
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => currentSchemaVersion;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -61,9 +70,54 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(schema.exerciseSets, schema.exerciseSets.completedAt);
         await _seedMuscles();
       },
+      from2To3: (m, schema) async {
+        await m.addColumn(schema.settings, schema.settings.currencyCode);
+        await m.addColumn(schema.settings, schema.settings.lastBackupAt);
+      },
+      from3To4: (m, schema) async {
+        await m.createTable(schema.exerciseThumbnails);
+        await _moveLegacyThumbnailsIntoDatabase();
+        await m.alterTable(TableMigration(schema.exercises));
+      },
     ),
-    beforeOpen: (_) => customStatement('PRAGMA foreign_keys = ON'),
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+      final before = details.versionBefore;
+      if (before != null && before < 4) await _deleteLegacyThumbnails();
+    },
   );
+
+  Future<void> _moveLegacyThumbnailsIntoDatabase() async {
+    final directory = await legacyFilesDirectory?.call();
+    if (directory == null) return;
+
+    final rows = await customSelect(
+      'SELECT id, thumbnail_path FROM exercises '
+      'WHERE thumbnail_path IS NOT NULL',
+    ).get();
+    for (final row in rows) {
+      final file = File(
+        '${directory.path}/${row.read<String>('thumbnail_path')}',
+      );
+      if (!file.existsSync()) continue;
+      await customInsert(
+        'INSERT INTO exercise_thumbnails (exercise_id, image) VALUES (?, ?)',
+        variables: [
+          Variable.withInt(row.read<int>('id')),
+          Variable.withBlob(await file.readAsBytes()),
+        ],
+      );
+    }
+  }
+
+  /// Runs only once the upgrade has committed, so a failed migration never
+  /// loses the original files.
+  Future<void> _deleteLegacyThumbnails() async {
+    final directory = await legacyFilesDirectory?.call();
+    if (directory == null) return;
+    final thumbnails = Directory('${directory.path}/thumbnails');
+    if (thumbnails.existsSync()) await thumbnails.delete(recursive: true);
+  }
 
   Future<void> _seedMuscles() => batch(
     (batch) => batch.insertAll(

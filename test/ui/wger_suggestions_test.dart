@@ -10,11 +10,8 @@ import 'package:loggym/app.dart';
 import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/database/database_provider.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/data/services/thumbnail_store.dart';
 import 'package:loggym/data/services/wger_client.dart';
 import 'package:loggym/domain/tracking_type.dart';
-
-import '../helpers/in_memory_thumbnail_store.dart';
 
 void main() {
   final fixture = File(
@@ -44,9 +41,6 @@ void main() {
         overrides: [
           appDatabaseProvider.overrideWithValue(database),
           wgerClientProvider.overrideWithValue(WgerClient(wger ?? onlineWger)),
-          thumbnailStoreProvider.overrideWith(
-            (ref) async => InMemoryThumbnailStore(),
-          ),
         ],
         child: const LogGymApp(),
       ),
@@ -92,7 +86,11 @@ void main() {
     final rows = await database.select(database.exercises).get();
     expect(rows.single.title, 'Bench Press');
     expect(rows.single.externalId, startsWith('wger:'));
-    expect(rows.single.thumbnailPath, startsWith('thumbnails/wger-'));
+    expect(
+      await repository.thumbnail(rows.single.id),
+      [1, 2, 3],
+      reason: 'the downloaded wger thumbnail is stored with the exercise',
+    );
     expect(find.text('Chest, Shoulders, Triceps'), findsOneWidget);
 
     await unmountApp(tester);
