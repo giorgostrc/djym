@@ -50,15 +50,4 @@ void main() {
 
     await unmountApp(tester);
   });
-
-  testWidgets('log session button opens the session screen', (tester) async {
-    await pumpApp(tester);
-
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pumpAndSettle();
-
-    expect(find.text('New session'), findsOneWidget);
-
-    await unmountApp(tester);
-  });
 }

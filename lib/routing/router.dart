@@ -53,10 +53,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(
-        path: Routes.newSession,
-        pageBuilder: (context, state) => const MaterialPage(
-          fullscreenDialog: true,
-          child: SessionScreen(),
+        path: Routes.workoutSession,
+        builder: (context, state) => SessionScreen(
+          sessionId: int.parse(state.pathParameters['id']!),
+          pickExercisesOnOpen: state.uri.queryParameters['pick'] == 'true',
         ),
       ),
       GoRoute(

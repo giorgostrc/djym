@@ -18,10 +18,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   DateTime get _focusedMonth => DateTime(_focusedDay.year, _focusedDay.month);
 
+  Future<void> _startWorkout() async {
+    final id = await ref.read(workoutSessionRepositoryProvider).startSession();
+    if (mounted) await context.push(Routes.session(id, pickExercises: true));
+  }
+
   @override
   Widget build(BuildContext context) {
     final sessions =
         ref.watch(sessionsInMonthProvider(_focusedMonth)).value ?? const [];
+    final hasActiveSession = ref.watch(activeSessionProvider).value != null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('LogGym')),
@@ -36,12 +42,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             .toList(),
         onPageChanged: (focusedDay) => setState(() => _focusedDay = focusedDay),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: null,
-        onPressed: () => context.push(Routes.newSession),
-        icon: const Icon(Icons.add),
-        label: const Text('Log session'),
-      ),
+      floatingActionButton: hasActiveSession
+          ? null
+          : FloatingActionButton.extended(
+              heroTag: null,
+              onPressed: _startWorkout,
+              icon: const Icon(Icons.play_arrow),
+              label: const Text('Start workout'),
+            ),
     );
   }
 }

@@ -17,6 +17,7 @@ dependencies:
   image_picker: ^1.2.3
   path_provider: ^2.1.6
   table_calendar: ^3.3.0
+  wakelock_plus: ^1.6.1
 
 dev_dependencies:
   build_runner: ^2.15.1

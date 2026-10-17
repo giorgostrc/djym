@@ -1,16 +1,234 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:loggym/data/database/app_database.dart';
+import 'package:loggym/data/repositories/settings_repository.dart';
+import 'package:loggym/data/repositories/workout_session_repository.dart';
+import 'package:loggym/domain/unit_system.dart';
+import 'package:loggym/routing/routes.dart';
+import 'package:loggym/ui/core/clock_provider.dart';
 import 'package:loggym/ui/core/placeholder_body.dart';
+import 'package:loggym/ui/exercises/exercise_picker.dart';
+import 'package:loggym/ui/session/exercise_card.dart';
+import 'package:loggym/ui/session/session_summary_sheet.dart';
 
-class SessionScreen extends StatelessWidget {
-  const SessionScreen({super.key});
+class SessionScreen extends ConsumerStatefulWidget {
+  const SessionScreen({
+    required this.sessionId,
+    this.pickExercisesOnOpen = false,
+    super.key,
+  });
+
+  final int sessionId;
+
+  /// A fresh workout opens straight into the picker to save a tap.
+  final bool pickExercisesOnOpen;
+
+  @override
+  ConsumerState<SessionScreen> createState() => _SessionScreenState();
+}
+
+class _SessionScreenState extends ConsumerState<SessionScreen> {
+  WorkoutSessionRepository get _repository =>
+      ref.read(workoutSessionRepositoryProvider);
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.pickExercisesOnOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _addExercises());
+    }
+  }
+
+  Future<void> _addExercises() async {
+    final ids = await showExercisePicker(context);
+    if (ids == null) return;
+    await _repository.addExercises(widget.sessionId, ids);
+  }
+
+  Future<void> _reorder(
+    List<SessionExercise> exercises,
+    int oldIndex,
+    int newIndex,
+  ) {
+    final reordered = [...exercises];
+    final moved = reordered.removeAt(oldIndex);
+    reordered.insert(newIndex > oldIndex ? newIndex - 1 : newIndex, moved);
+    return _repository.reorderExercises(reordered);
+  }
+
+  Future<void> _finish(
+    List<SessionExercise> exercises,
+    UnitSystem units,
+  ) async {
+    final logged = exercises.any(
+      (entry) => entry.sets.any((set) => set.hasValues),
+    );
+    if (!logged) return _discard(nothingLogged: true);
+
+    final summary = await _repository.finishSession(widget.sessionId);
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (_) => SessionSummarySheet(summary: summary, units: units),
+    );
+    if (mounted) context.go(Routes.calendar);
+  }
+
+  Future<void> _discard({bool nothingLogged = false}) async {
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(nothingLogged ? 'Nothing logged yet' : 'Discard workout?'),
+        content: Text(
+          nothingLogged
+              ? 'There is nothing to save. Discard this workout?'
+              : 'All sets logged in this workout will be deleted.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep going'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Discard'),
+          ),
+        ],
+      ),
+    );
+    if (!(discard ?? false) || !mounted) return;
+
+    final repository = _repository;
+    context.go(Routes.calendar);
+    await repository.discardSession(widget.sessionId);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final session = ref.watch(sessionProvider(widget.sessionId)).value;
+    final exercises = ref
+        .watch(sessionExercisesProvider(widget.sessionId))
+        .value;
+    final units =
+        ref.watch(settingsProvider).value?.unitSystem ?? UnitSystem.metric;
+
+    if (session == null || exercises == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('New session')),
-      body: const PlaceholderBody(
-        icon: Icons.fitness_center,
-        message: 'Add exercises from a plan or one by one',
+      appBar: AppBar(
+        title: _ElapsedTitle(session),
+        actions: [
+          TextButton(
+            onPressed: () => _finish(exercises, units),
+            child: const Text('Finish'),
+          ),
+          PopupMenuButton<void>(
+            tooltip: 'Workout options',
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                onTap: _discard,
+                child: const Text('Discard workout'),
+              ),
+            ],
+          ),
+        ],
+      ),
+      body: exercises.isEmpty
+          ? PlaceholderBody(
+              icon: Icons.fitness_center,
+              message: 'Add the exercises you are doing',
+              action: FilledButton.icon(
+                onPressed: _addExercises,
+                icon: const Icon(Icons.add),
+                label: const Text('Add exercise'),
+              ),
+            )
+          : ReorderableListView.builder(
+              buildDefaultDragHandles: false,
+              padding: const EdgeInsets.only(top: 6),
+              itemCount: exercises.length,
+              onReorder: (oldIndex, newIndex) =>
+                  _reorder(exercises, oldIndex, newIndex),
+              itemBuilder: (context, index) => ExerciseCard(
+                key: ValueKey(exercises[index].exercise.id),
+                entry: exercises[index],
+                sessionId: widget.sessionId,
+                index: index,
+                units: units,
+              ),
+              footer: _SessionFooter(
+                session: session,
+                onAddExercise: _addExercises,
+              ),
+            ),
+    );
+  }
+}
+
+class _ElapsedTitle extends ConsumerWidget {
+  const _ElapsedTitle(this.session);
+
+  final WorkoutSession session;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final now = ref.watch(clockProvider).value ?? DateTime.now();
+    final end = session.finishedAt ?? now;
+    final elapsed = end.difference(session.startedAt).inSeconds;
+    return Text('Workout · ${formatDuration(elapsed < 0 ? 0 : elapsed)}');
+  }
+}
+
+class _SessionFooter extends ConsumerStatefulWidget {
+  const _SessionFooter({required this.session, required this.onAddExercise});
+
+  final WorkoutSession session;
+  final VoidCallback onAddExercise;
+
+  @override
+  ConsumerState<_SessionFooter> createState() => _SessionFooterState();
+}
+
+class _SessionFooterState extends ConsumerState<_SessionFooter> {
+  late final _notes = TextEditingController(text: widget.session.notes);
+
+  @override
+  void dispose() {
+    _notes.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 16,
+        children: [
+          OutlinedButton.icon(
+            onPressed: widget.onAddExercise,
+            icon: const Icon(Icons.add),
+            label: const Text('Add exercise'),
+          ),
+          TextField(
+            controller: _notes,
+            minLines: 2,
+            maxLines: null,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Workout notes',
+              alignLabelWithHint: true,
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (notes) => ref
+                .read(workoutSessionRepositoryProvider)
+                .updateNotes(widget.session.id, notes),
+          ),
+        ],
       ),
     );
   }
