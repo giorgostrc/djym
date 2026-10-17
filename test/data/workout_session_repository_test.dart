@@ -126,7 +126,7 @@ void main() {
     final sessionId = await sessions.startSession();
     await sessions.addExercises(sessionId, [squat]);
 
-    await sessions.discardSession(sessionId);
+    await sessions.deleteSession(sessionId);
 
     expect(await sessions.watchActiveSession().first, isNull);
     expect(await database.select(database.exerciseSets).get(), isEmpty);
@@ -209,6 +209,86 @@ void main() {
 
       expect(records.allTimeBest, isNull);
       expect(records.lastPerformance, isNull);
+    });
+  });
+
+  group('history', () {
+    test(
+      'month overview lists finished sessions with their exercises',
+      () async {
+        final squat = await createExercise('Squat', TrackingType.weightReps);
+        final plank = await createExercise('Plank', TrackingType.duration);
+        final finished = await sessions.startSession();
+        await sessions.addExercises(finished, [squat, plank]);
+        await sessions.addSet(finished, squat);
+        final [squatEntry, plankEntry] = await sessionExercises(finished);
+        for (final set in squatEntry.sets) {
+          await logSet(set, reps: 5, weightKg: 100);
+        }
+        await logSet(plankEntry.sets.single, durationSeconds: 60);
+        await sessions.finishSession(finished);
+        final active = await sessions.startSession();
+        await sessions.addExercises(active, [squat]);
+
+        final now = DateTime.now();
+        final [overview] = await sessions
+            .watchSessionsInMonth(DateTime(now.year, now.month))
+            .first;
+
+        expect(overview.session.id, finished);
+        expect(overview.exerciseTitles, ['Squat', 'Plank']);
+        expect(overview.setCount, 3);
+      },
+    );
+
+    test(
+      'a past workout is finished, starts at 18:00 and is not active',
+      () async {
+        final id = await sessions.logPastSession(DateTime(2026, 10, 3, 9, 15));
+
+        final session = await sessions.watchSession(id).first;
+        expect(session?.startedAt, DateTime(2026, 10, 3, 18));
+        expect(session?.finishedAt, DateTime(2026, 10, 3, 19));
+        expect(await sessions.watchActiveSession().first, isNull);
+      },
+    );
+
+    test('updates the start and end of a workout', () async {
+      final id = await sessions.logPastSession(DateTime(2026, 10, 3));
+
+      await sessions.updateSessionTimes(
+        id,
+        startedAt: DateTime(2026, 10, 3, 7),
+        finishedAt: DateTime(2026, 10, 3, 8, 30),
+      );
+
+      final session = await sessions.watchSession(id).first;
+      expect(session?.startedAt, DateTime(2026, 10, 3, 7));
+      expect(session?.finishedAt, DateTime(2026, 10, 3, 8, 30));
+    });
+
+    test('tidying drops empty sets and keeps a session with values', () async {
+      final squat = await createExercise('Squat', TrackingType.weightReps);
+      final id = await sessions.logPastSession(DateTime(2026, 10, 3));
+      await sessions.addExercises(id, [squat]);
+      await sessions.addSet(id, squat);
+      final [entry] = await sessionExercises(id);
+      await logSet(entry.sets.first, reps: 5, weightKg: 100);
+
+      await sessions.tidyFinishedSession(id);
+
+      final [tidied] = await sessionExercises(id);
+      expect(tidied.sets, hasLength(1));
+    });
+
+    test('tidying removes a session where nothing was logged', () async {
+      final squat = await createExercise('Squat', TrackingType.weightReps);
+      final id = await sessions.logPastSession(DateTime(2026, 10, 3));
+      await sessions.addExercises(id, [squat]);
+
+      await sessions.tidyFinishedSession(id);
+
+      expect(await sessions.watchSession(id).first, isNull);
     });
   });
 }

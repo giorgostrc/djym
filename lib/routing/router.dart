@@ -6,6 +6,7 @@ import 'package:loggym/ui/calendar/calendar_screen.dart';
 import 'package:loggym/ui/core/app_shell.dart';
 import 'package:loggym/ui/exercises/exercise_form_screen.dart';
 import 'package:loggym/ui/exercises/exercises_screen.dart';
+import 'package:loggym/ui/history/session_detail_screen.dart';
 import 'package:loggym/ui/plans/plans_screen.dart';
 import 'package:loggym/ui/session/session_screen.dart';
 import 'package:loggym/ui/settings/settings_screen.dart';
@@ -23,6 +24,14 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: Routes.calendar,
                 builder: (context, state) => const CalendarScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'sessions/:id',
+                    builder: (context, state) => SessionDetailScreen(
+                      sessionId: int.parse(state.pathParameters['id']!),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

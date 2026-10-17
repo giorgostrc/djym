@@ -12,6 +12,14 @@ class SessionExercise {
   final List<ExerciseSet> sets;
 }
 
+class SessionOverview {
+  const SessionOverview(this.session, this.exerciseTitles, this.setCount);
+
+  final WorkoutSession session;
+  final List<String> exerciseTitles;
+  final int setCount;
+}
+
 class LastPerformance {
   const LastPerformance({required this.date, required this.sets});
 
@@ -79,19 +87,88 @@ class WorkoutSessionRepository {
   $ExerciseSetsTable get _sets => _database.exerciseSets;
   $WorkoutSessionsTable get _sessions => _database.workoutSessions;
 
-  Stream<List<WorkoutSession>> watchSessionsInMonth(DateTime month) {
+  /// Finished sessions of [month] with the exercises done in each, in the
+  /// order they were logged.
+  Stream<List<SessionOverview>> watchSessionsInMonth(DateTime month) {
     final start = DateTime(month.year, month.month);
     final end = DateTime(month.year, month.month + 1);
-    final query = _database.select(_sessions)
-      ..where(
-        (session) =>
-            session.startedAt.isBiggerOrEqualValue(start) &
-            session.startedAt.isSmallerThanValue(end) &
-            session.finishedAt.isNotNull(),
-      )
-      ..orderBy([(session) => OrderingTerm.asc(session.startedAt)]);
-    return query.watch();
+    final exercises = _database.exercises;
+    final query =
+        _database.select(_sessions).join([
+            leftOuterJoin(_sets, _sets.sessionId.equalsExp(_sessions.id)),
+            leftOuterJoin(exercises, exercises.id.equalsExp(_sets.exerciseId)),
+          ])
+          ..where(
+            _sessions.startedAt.isBiggerOrEqualValue(start) &
+                _sessions.startedAt.isSmallerThanValue(end) &
+                _sessions.finishedAt.isNotNull(),
+          )
+          ..orderBy([
+            OrderingTerm.asc(_sessions.startedAt),
+            OrderingTerm.asc(_sets.position),
+          ]);
+
+    return query.watch().map((rows) {
+      final titles = <int, Set<String>>{};
+      final setCounts = <int, int>{};
+      final sessions = <int, WorkoutSession>{};
+      for (final row in rows) {
+        final session = row.readTable(_sessions);
+        sessions[session.id] = session;
+        final exerciseTitles = titles.putIfAbsent(session.id, () => {});
+        final exercise = row.readTableOrNull(exercises);
+        if (exercise == null) continue;
+        exerciseTitles.add(exercise.title);
+        setCounts.update(session.id, (count) => count + 1, ifAbsent: () => 1);
+      }
+      return [
+        for (final MapEntry(key: id, value: session) in sessions.entries)
+          SessionOverview(session, titles[id]!.toList(), setCounts[id] ?? 0),
+      ];
+    });
   }
+
+  /// A workout logged after the fact: it starts at 18:00 on [day], lasts an
+  /// hour until edited, and never becomes the active session.
+  Future<int> logPastSession(DateTime day) {
+    final startedAt = DateTime(day.year, day.month, day.day, 18);
+    return _database
+        .into(_sessions)
+        .insert(
+          WorkoutSessionsCompanion.insert(
+            startedAt: startedAt,
+            finishedAt: Value(startedAt.add(const Duration(hours: 1))),
+          ),
+        );
+  }
+
+  Future<void> updateSessionTimes(
+    int sessionId, {
+    required DateTime startedAt,
+    required DateTime finishedAt,
+  }) =>
+      (_database.update(_sessions)..where((s) => s.id.equals(sessionId))).write(
+        WorkoutSessionsCompanion(
+          startedAt: Value(startedAt),
+          finishedAt: Value(finishedAt),
+        ),
+      );
+
+  /// Run when leaving a finished session after editing: drops sets without
+  /// values, and the session itself when nothing is left.
+  Future<void> tidyFinishedSession(int sessionId) =>
+      _database.transaction(() async {
+        final sets = await (_database.select(
+          _sets,
+        )..where((set) => set.sessionId.equals(sessionId))).get();
+        await deleteSets([
+          for (final set in sets)
+            if (!set.hasValues) set,
+        ]);
+        if (sets.every((set) => !set.hasValues)) {
+          await deleteSession(sessionId);
+        }
+      });
 
   SimpleSelectStatement<$WorkoutSessionsTable, WorkoutSession>
   _activeSessionQuery() => _database.select(_sessions)
@@ -266,7 +343,7 @@ class WorkoutSessionRepository {
         );
       });
 
-  Future<void> discardSession(int sessionId) =>
+  Future<void> deleteSession(int sessionId) =>
       (_database.delete(_sessions)..where((s) => s.id.equals(sessionId))).go();
 
   Future<int> _nextPosition(int sessionId) async {
@@ -284,11 +361,13 @@ final workoutSessionRepositoryProvider = Provider<WorkoutSessionRepository>(
   (ref) => WorkoutSessionRepository(ref.watch(appDatabaseProvider)),
 );
 
-final StreamProviderFamily<List<WorkoutSession>, DateTime>
-sessionsInMonthProvider = StreamProvider.family<List<WorkoutSession>, DateTime>(
-  (ref, month) =>
-      ref.watch(workoutSessionRepositoryProvider).watchSessionsInMonth(month),
-);
+final StreamProviderFamily<List<SessionOverview>, DateTime>
+sessionsInMonthProvider =
+    StreamProvider.family<List<SessionOverview>, DateTime>(
+      (ref, month) => ref
+          .watch(workoutSessionRepositoryProvider)
+          .watchSessionsInMonth(month),
+    );
 
 final activeSessionProvider = StreamProvider<WorkoutSession?>(
   (ref) => ref.watch(workoutSessionRepositoryProvider).watchActiveSession(),

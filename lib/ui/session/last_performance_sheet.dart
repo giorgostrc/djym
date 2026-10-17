@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/repositories/workout_session_repository.dart';
 import 'package:loggym/domain/unit_system.dart';
+import 'package:loggym/ui/session/logged_set_tile.dart';
 import 'package:loggym/ui/session/set_description.dart';
 
 Future<void> showLastPerformance(
@@ -67,7 +68,7 @@ class _LastPerformanceSheet extends StatelessWidget {
                 itemCount: last.sets.length,
                 separatorBuilder: (_, _) =>
                     const Divider(indent: 24, endIndent: 24, height: 1),
-                itemBuilder: (context, index) => _LoggedSetTile(
+                itemBuilder: (context, index) => LoggedSetTile(
                   number: index + 1,
                   set: last.sets[index],
                   description: describeSet(
@@ -80,56 +81,6 @@ class _LastPerformanceSheet extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _LoggedSetTile extends StatelessWidget {
-  const _LoggedSetTile({
-    required this.number,
-    required this.set,
-    required this.description,
-  });
-
-  final int number;
-  final ExerciseSet set;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final comment = set.comment;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 16,
-        children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: theme.colorScheme.secondaryContainer,
-            child: Text('$number', style: theme.textTheme.labelLarge),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 4,
-              children: [
-                Text(description, style: theme.textTheme.titleMedium),
-                if (comment != null)
-                  Text(
-                    comment,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

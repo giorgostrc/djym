@@ -88,7 +88,7 @@ void main() {
     expect(find.text('Workout complete'), findsOneWidget);
     expect(find.text('500 kg'), findsOneWidget);
 
-    await tester.tap(find.text('Done'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Done'));
     await tester.pumpAndSettle();
 
     final sets = await database.select(database.exerciseSets).get();

@@ -9,6 +9,8 @@ abstract final class Routes {
 
   static String exercise(int id) => '/exercises/$id';
 
+  static String sessionDetail(int id) => '/calendar/sessions/$id';
+
   static String session(int id, {bool pickExercises = false}) => Uri(
     path: '/session/$id',
     queryParameters: pickExercises ? {'pick': 'true'} : null,

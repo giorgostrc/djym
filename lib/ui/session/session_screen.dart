@@ -6,6 +6,7 @@ import 'package:loggym/data/repositories/settings_repository.dart';
 import 'package:loggym/data/repositories/workout_session_repository.dart';
 import 'package:loggym/domain/unit_system.dart';
 import 'package:loggym/routing/routes.dart';
+import 'package:loggym/ui/calendar/selected_day_provider.dart';
 import 'package:loggym/ui/core/clock_provider.dart';
 import 'package:loggym/ui/core/placeholder_body.dart';
 import 'package:loggym/ui/exercises/exercise_picker.dart';
@@ -64,7 +65,13 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     final logged = exercises.any(
       (entry) => entry.sets.any((set) => set.hasValues),
     );
-    if (!logged) return _discard(nothingLogged: true);
+    if (!logged) {
+      return _remove(
+        title: 'Nothing logged yet',
+        message: 'There is nothing to save. Discard this workout?',
+        action: 'Discard',
+      );
+    }
 
     final summary = await _repository.finishSession(widget.sessionId);
     if (!mounted) return;
@@ -72,36 +79,37 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       context: context,
       builder: (_) => SessionSummarySheet(summary: summary, units: units),
     );
+    ref.read(selectedDayProvider.notifier).selectToday();
     if (mounted) context.go(Routes.calendar);
   }
 
-  Future<void> _discard({bool nothingLogged = false}) async {
-    final discard = await showDialog<bool>(
+  Future<void> _remove({
+    required String title,
+    required String message,
+    required String action,
+  }) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(nothingLogged ? 'Nothing logged yet' : 'Discard workout?'),
-        content: Text(
-          nothingLogged
-              ? 'There is nothing to save. Discard this workout?'
-              : 'All sets logged in this workout will be deleted.',
-        ),
+        title: Text(title),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Keep going'),
+            child: const Text('Keep it'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Discard'),
+            child: Text(action),
           ),
         ],
       ),
     );
-    if (!(discard ?? false) || !mounted) return;
+    if (!(confirmed ?? false) || !mounted) return;
 
     final repository = _repository;
     context.go(Routes.calendar);
-    await repository.discardSession(widget.sessionId);
+    await repository.deleteSession(widget.sessionId);
   }
 
   @override
@@ -117,53 +125,160 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: _ElapsedTitle(session),
-        actions: [
-          TextButton(
-            onPressed: () => _finish(exercises, units),
-            child: const Text('Finish'),
-          ),
-          PopupMenuButton<void>(
-            tooltip: 'Workout options',
-            itemBuilder: (_) => [
-              PopupMenuItem(
-                onTap: _discard,
-                child: const Text('Discard workout'),
+    final finished = session.finishedAt != null;
+    final repository = _repository;
+
+    return PopScope(
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop && finished) {
+          await repository.tidyFinishedSession(widget.sessionId);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: finished
+              ? Text(
+                  MaterialLocalizations.of(
+                    context,
+                  ).formatMediumDate(session.startedAt),
+                )
+              : _ElapsedTitle(session),
+          actions: [
+            if (finished)
+              TextButton(onPressed: context.pop, child: const Text('Done'))
+            else
+              TextButton(
+                onPressed: () => _finish(exercises, units),
+                child: const Text('Finish'),
               ),
-            ],
+            PopupMenuButton<void>(
+              tooltip: 'Workout options',
+              itemBuilder: (_) => [
+                if (finished)
+                  PopupMenuItem(
+                    onTap: () => _remove(
+                      title: 'Delete workout?',
+                      message: 'This workout and all its sets will be deleted.',
+                      action: 'Delete',
+                    ),
+                    child: const Text('Delete workout'),
+                  )
+                else
+                  PopupMenuItem(
+                    onTap: () => _remove(
+                      title: 'Discard workout?',
+                      message:
+                          'All sets logged in this workout will be deleted.',
+                      action: 'Discard',
+                    ),
+                    child: const Text('Discard workout'),
+                  ),
+              ],
+            ),
+          ],
+          bottom: finished ? _SessionTimes(session) : null,
+        ),
+        body: exercises.isEmpty
+            ? PlaceholderBody(
+                icon: Icons.fitness_center,
+                message: 'Add the exercises you are doing',
+                action: FilledButton.icon(
+                  onPressed: _addExercises,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add exercise'),
+                ),
+              )
+            : ReorderableListView.builder(
+                buildDefaultDragHandles: false,
+                padding: const EdgeInsets.only(top: 6),
+                itemCount: exercises.length,
+                onReorder: (oldIndex, newIndex) =>
+                    _reorder(exercises, oldIndex, newIndex),
+                itemBuilder: (context, index) => ExerciseCard(
+                  key: ValueKey(exercises[index].exercise.id),
+                  entry: exercises[index],
+                  sessionId: widget.sessionId,
+                  index: index,
+                  units: units,
+                ),
+                footer: _SessionFooter(
+                  session: session,
+                  onAddExercise: _addExercises,
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+/// Start and end of a finished workout, both editable.
+class _SessionTimes extends ConsumerWidget implements PreferredSizeWidget {
+  const _SessionTimes(this.session);
+
+  final WorkoutSession session;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(48);
+
+  Future<void> _pick(
+    BuildContext context,
+    WidgetRef ref, {
+    required bool start,
+  }) async {
+    final startedAt = session.startedAt;
+    final finishedAt = session.finishedAt!;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(start ? startedAt : finishedAt),
+    );
+    if (picked == null) return;
+
+    DateTime on(DateTime day) =>
+        DateTime(day.year, day.month, day.day, picked.hour, picked.minute);
+    final newStart = start ? on(startedAt) : startedAt;
+    var newEnd = start ? finishedAt : on(startedAt);
+    if (!newEnd.isAfter(newStart)) {
+      newEnd = start
+          ? newStart.add(finishedAt.difference(startedAt))
+          : newEnd.add(const Duration(days: 1));
+    }
+    await ref
+        .read(workoutSessionRepositoryProvider)
+        .updateSessionTimes(
+          session.id,
+          startedAt: newStart,
+          finishedAt: newEnd,
+        );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final localizations = MaterialLocalizations.of(context);
+    String time(DateTime value) =>
+        localizations.formatTimeOfDay(TimeOfDay.fromDateTime(value));
+    final finishedAt = session.finishedAt!;
+    final duration = finishedAt.difference(session.startedAt).inSeconds;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        children: [
+          TextButton.icon(
+            onPressed: () => _pick(context, ref, start: true),
+            icon: const Icon(Icons.schedule),
+            label: Text('Start ${time(session.startedAt)}'),
+          ),
+          TextButton(
+            onPressed: () => _pick(context, ref, start: false),
+            child: Text('End ${time(finishedAt)}'),
+          ),
+          const Spacer(),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Text(formatDuration(duration)),
           ),
         ],
       ),
-      body: exercises.isEmpty
-          ? PlaceholderBody(
-              icon: Icons.fitness_center,
-              message: 'Add the exercises you are doing',
-              action: FilledButton.icon(
-                onPressed: _addExercises,
-                icon: const Icon(Icons.add),
-                label: const Text('Add exercise'),
-              ),
-            )
-          : ReorderableListView.builder(
-              buildDefaultDragHandles: false,
-              padding: const EdgeInsets.only(top: 6),
-              itemCount: exercises.length,
-              onReorder: (oldIndex, newIndex) =>
-                  _reorder(exercises, oldIndex, newIndex),
-              itemBuilder: (context, index) => ExerciseCard(
-                key: ValueKey(exercises[index].exercise.id),
-                entry: exercises[index],
-                sessionId: widget.sessionId,
-                index: index,
-                units: units,
-              ),
-              footer: _SessionFooter(
-                session: session,
-                onAddExercise: _addExercises,
-              ),
-            ),
     );
   }
 }
