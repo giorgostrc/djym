@@ -3,6 +3,7 @@
 
 import 'package:drift/drift.dart';
 import 'package:loggym/domain/theme_preference.dart';
+import 'package:loggym/domain/tracking_type.dart';
 import 'package:loggym/domain/unit_system.dart';
 
 class Exercises extends Table {
@@ -11,6 +12,10 @@ class Exercises extends Table {
   TextColumn get formGuidance => text().nullable()();
   TextColumn get thumbnailPath => text().nullable()();
   TextColumn get externalId => text().nullable().unique()();
+  TextColumn get trackingType => textEnum<TrackingType>().withDefault(
+    Constant(TrackingType.weightReps.name),
+  )();
+  DateTimeColumn get archivedAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
@@ -77,7 +82,9 @@ class ExerciseSets extends Table {
   IntColumn get reps => integer().nullable()();
   RealColumn get weightKg => real().nullable()();
   IntColumn get durationSeconds => integer().nullable()();
+  RealColumn get distanceMeters => real().nullable()();
   TextColumn get comment => text().nullable()();
+  DateTimeColumn get completedAt => dateTime().nullable()();
 }
 
 @DataClassName('Settings')

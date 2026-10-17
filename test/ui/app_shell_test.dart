@@ -40,6 +40,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Workout plans'), findsOneWidget);
 
+    await tester.tap(find.text('Exercises'));
+    await tester.pumpAndSettle();
+    expect(find.text('No exercises yet'), findsOneWidget);
+
     await tester.tap(find.text('Settings').last);
     await tester.pumpAndSettle();
     expect(find.text('Theme'), findsOneWidget);
