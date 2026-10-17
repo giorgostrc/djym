@@ -37,6 +37,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         onPageChanged: (focusedDay) => setState(() => _focusedDay = focusedDay),
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () => context.push(Routes.newSession),
         icon: const Icon(Icons.add),
         label: const Text('Log session'),

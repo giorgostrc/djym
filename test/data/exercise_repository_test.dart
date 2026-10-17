@@ -121,4 +121,53 @@ void main() {
       expect(await exerciseTitles(), ['Squat']);
     },
   );
+
+  test('keeps the wger link on edit and can remove the thumbnail', () async {
+    await repository.saveExercise(
+      title: 'Bench Press',
+      trackingType: TrackingType.weightReps,
+      muscleIds: [muscleIds['Chest']!],
+      externalId: 'wger:bench-uuid',
+      thumbnailPath: 'thumbnails/b.png',
+    );
+    final [bench] = await repository.watchExercises().first;
+
+    await repository.saveExercise(
+      id: bench.exercise.id,
+      title: 'Bench press',
+      trackingType: TrackingType.weightReps,
+      muscleIds: [muscleIds['Chest']!],
+    );
+    final [edited] = await repository.watchExercises().first;
+
+    expect(edited.exercise.title, 'Bench press');
+    expect(edited.exercise.externalId, 'wger:bench-uuid');
+    expect(edited.exercise.thumbnailPath, isNull);
+  });
+
+  test('saving an archived wger exercise again restores it', () async {
+    Future<int> saveBench() => repository.saveExercise(
+      title: 'Bench Press',
+      trackingType: TrackingType.weightReps,
+      muscleIds: [muscleIds['Chest']!],
+      externalId: 'wger:bench-uuid',
+    );
+    final id = await saveBench();
+    await database
+        .into(database.planExercises)
+        .insert(
+          PlanExercisesCompanion.insert(
+            planId: await database
+                .into(database.workoutPlans)
+                .insert(WorkoutPlansCompanion.insert(name: 'Push')),
+            exerciseId: id,
+            position: 0,
+            targetSets: 3,
+          ),
+        );
+    await repository.removeExercise(id);
+
+    expect(await saveBench(), id);
+    expect(await exerciseTitles(), ['Bench Press']);
+  });
 }

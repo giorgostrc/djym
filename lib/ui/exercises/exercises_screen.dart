@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
 import 'package:loggym/routing/routes.dart';
 import 'package:loggym/ui/core/placeholder_body.dart';
+import 'package:loggym/ui/exercises/exercise_avatar.dart';
 import 'package:loggym/ui/exercises/exercise_search.dart';
 import 'package:loggym/ui/exercises/remove_exercise.dart';
-import 'package:loggym/ui/exercises/tracking_type_display.dart';
 
 class ExercisesScreen extends ConsumerWidget {
   const ExercisesScreen({super.key});
@@ -21,6 +21,7 @@ class ExercisesScreen extends ConsumerWidget {
       floatingActionButton: exercises?.isEmpty ?? true
           ? null
           : FloatingActionButton.extended(
+              heroTag: null,
               onPressed: createExercise,
               icon: const Icon(Icons.add),
               label: const Text('Add exercise'),
@@ -30,10 +31,19 @@ class ExercisesScreen extends ConsumerWidget {
         [] => PlaceholderBody(
           icon: Icons.fitness_center,
           message: 'No exercises yet',
-          action: FilledButton.icon(
-            onPressed: createExercise,
-            icon: const Icon(Icons.add),
-            label: const Text('Create your first exercise'),
+          action: Column(
+            spacing: 8,
+            children: [
+              FilledButton.icon(
+                onPressed: createExercise,
+                icon: const Icon(Icons.add),
+                label: const Text('Create your first exercise'),
+              ),
+              Text(
+                'Type a name to get suggestions from wger',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
           ),
         ),
         _ => _SearchableExerciseList(exercises: exercises),
@@ -159,7 +169,7 @@ class _ExerciseTile extends ConsumerWidget {
         return true;
       },
       child: ListTile(
-        leading: Icon(exercise.trackingType.icon),
+        leading: ExerciseAvatar(exercise),
         title: Text(exercise.title),
         subtitle: entry.muscles.isEmpty
             ? null

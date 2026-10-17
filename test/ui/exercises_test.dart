@@ -2,10 +2,13 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:loggym/app.dart';
 import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/database/database_provider.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
+import 'package:loggym/data/services/wger_client.dart';
 import 'package:loggym/domain/tracking_type.dart';
 import 'package:loggym/ui/exercises/exercise_picker.dart';
 import 'package:loggym/ui/exercises/exercises_screen.dart';
@@ -24,7 +27,14 @@ void main() {
   Future<void> openExercisesTab(WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [appDatabaseProvider.overrideWithValue(database)],
+        overrides: [
+          appDatabaseProvider.overrideWithValue(database),
+          wgerClientProvider.overrideWithValue(
+            WgerClient(
+              MockClient((_) async => http.Response('{"results": []}', 200)),
+            ),
+          ),
+        ],
         child: const LogGymApp(),
       ),
     );

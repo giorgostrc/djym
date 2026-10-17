@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
 import 'package:loggym/routing/routes.dart';
+import 'package:loggym/ui/exercises/exercise_avatar.dart';
 import 'package:loggym/ui/exercises/exercise_search.dart';
-import 'package:loggym/ui/exercises/tracking_type_display.dart';
 
 /// Returns the picked exercise ids in the order they were selected.
 Future<List<int>?> showExercisePicker(BuildContext context) =>
@@ -79,7 +79,7 @@ class _ExercisePickerState extends ConsumerState<ExercisePicker> {
             CheckboxListTile(
               value: _selectedIds.contains(entry.exercise.id),
               onChanged: (_) => _toggle(entry.exercise.id),
-              secondary: Icon(entry.exercise.trackingType.icon),
+              secondary: ExerciseAvatar(entry.exercise),
               title: Text(entry.exercise.title),
               subtitle: entry.muscles.isEmpty
                   ? null

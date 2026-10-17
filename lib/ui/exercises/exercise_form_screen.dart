@@ -1,11 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
+import 'package:loggym/data/services/thumbnail_store.dart';
+import 'package:loggym/data/services/wger_client.dart';
 import 'package:loggym/domain/tracking_type.dart';
 import 'package:loggym/ui/exercises/remove_exercise.dart';
 import 'package:loggym/ui/exercises/tracking_type_display.dart';
+import 'package:loggym/ui/exercises/wger_suggestions.dart';
+
+final imagePickerProvider = Provider<ImagePicker>((ref) => ImagePicker());
+
+enum _PhotoChoice { gallery, camera, remove }
 
 class ExerciseFormScreen extends ConsumerWidget {
   const ExerciseFormScreen({this.exerciseId, this.initialTitle, super.key});
@@ -53,8 +63,25 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
   ];
   var _dirty = false;
 
+  late String _suggestionTerm = (widget.initialTitle ?? '').trim();
+  Timer? _suggestionDebounce;
+  WgerExercise? _prefill;
+  late ({
+    String title,
+    String guidance,
+    List<int> muscleIds,
+    Future<String?> thumbnail,
+  })
+  _beforePrefill;
+  late Future<String?> _thumbnail = Future.value(
+    widget.existing?.exercise.thumbnailPath,
+  );
+
+  bool get _suggestsFromWger => widget.existing == null && _prefill == null;
+
   @override
   void dispose() {
+    _suggestionDebounce?.cancel();
     _title.dispose();
     _formGuidance.dispose();
     super.dispose();
@@ -62,10 +89,129 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
 
   void _markDirty() => setState(() => _dirty = true);
 
+  void _onTitleChanged(String title) {
+    _markDirty();
+    if (!_suggestsFromWger) return;
+
+    _suggestionDebounce?.cancel();
+    _suggestionDebounce = Timer(
+      const Duration(milliseconds: 400),
+      () => setState(() => _suggestionTerm = title.trim()),
+    );
+  }
+
+  void _applyPrefill(WgerExercise source) {
+    final idByName = {
+      for (final muscle in ref.read(musclesProvider).value ?? <Muscle>[])
+        muscle.name: muscle.id,
+    };
+    _beforePrefill = (
+      title: _title.text,
+      guidance: _formGuidance.text,
+      muscleIds: [..._muscleIds],
+      thumbnail: _thumbnail,
+    );
+    _prefill = source;
+    _thumbnail = _downloadThumbnail(source);
+    _title.text = source.name;
+    _formGuidance.text = source.description ?? '';
+    _muscleIds
+      ..clear()
+      ..addAll([for (final name in source.muscleNames) idByName[name]!]);
+    FocusScope.of(context).unfocus();
+    _markDirty();
+  }
+
+  void _clearPrefill() {
+    final before = _beforePrefill;
+    _prefill = null;
+    _thumbnail = before.thumbnail;
+    _title.text = before.title;
+    _formGuidance.text = before.guidance;
+    _muscleIds
+      ..clear()
+      ..addAll(before.muscleIds);
+    _suggestionTerm = before.title.trim();
+    _markDirty();
+  }
+
+  Future<void> _changePhoto() async {
+    final hasPhoto = await _thumbnail != null;
+    if (!mounted) return;
+
+    final choice = await showModalBottomSheet<_PhotoChoice>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Choose from gallery'),
+              onTap: () => Navigator.pop(context, _PhotoChoice.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined),
+              title: const Text('Take photo'),
+              onTap: () => Navigator.pop(context, _PhotoChoice.camera),
+            ),
+            if (hasPhoto)
+              ListTile(
+                leading: const Icon(Icons.delete_outline),
+                title: const Text('Remove photo'),
+                onTap: () => Navigator.pop(context, _PhotoChoice.remove),
+              ),
+          ],
+        ),
+      ),
+    );
+
+    switch (choice) {
+      case null:
+        return;
+      case _PhotoChoice.remove:
+        _thumbnail = Future.value();
+      case _PhotoChoice.gallery || _PhotoChoice.camera:
+        final picked = await ref
+            .read(imagePickerProvider)
+            .pickImage(
+              source: choice == _PhotoChoice.camera
+                  ? ImageSource.camera
+                  : ImageSource.gallery,
+              maxWidth: 400,
+              maxHeight: 400,
+              imageQuality: 85,
+            );
+        if (picked == null) return;
+        _thumbnail = _savePickedPhoto(picked);
+    }
+    _markDirty();
+  }
+
+  Future<String?> _savePickedPhoto(XFile picked) async {
+    final store = await ref.read(thumbnailStoreProvider.future);
+    final name = 'user-${DateTime.now().microsecondsSinceEpoch}.jpg';
+    return store.save(name, await picked.readAsBytes());
+  }
+
+  /// A missing thumbnail must never block saving the exercise.
+  Future<String?> _downloadThumbnail(WgerExercise source) async {
+    final url = source.thumbnailUrl;
+    if (url == null) return null;
+    try {
+      final bytes = await ref.read(wgerClientProvider).download(url);
+      final store = await ref.read(thumbnailStoreProvider.future);
+      return await store.save('wger-${source.uuid}.png', bytes);
+    } on Exception {
+      return null;
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
     final guidance = _formGuidance.text.trim();
+    final thumbnailPath = await _thumbnail;
     final id = await ref
         .read(exerciseRepositoryProvider)
         .saveExercise(
@@ -74,7 +220,13 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
           trackingType: _trackingType,
           formGuidance: guidance.isEmpty ? null : guidance,
           muscleIds: _muscleIds,
+          externalId: _prefill?.externalId,
+          thumbnailPath: thumbnailPath,
         );
+    final previous = widget.existing?.exercise.thumbnailPath;
+    if (previous != null && previous != thumbnailPath) {
+      await (await ref.read(thumbnailStoreProvider.future)).delete(previous);
+    }
     if (mounted) context.pop(id);
   }
 
@@ -146,6 +298,8 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              _PhotoField(thumbnail: _thumbnail, onTap: _changePhoto),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _title,
                 autofocus: widget.existing == null,
@@ -158,8 +312,15 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
                 validator: (value) => (value ?? '').trim().isEmpty
                     ? 'Give the exercise a title'
                     : null,
-                onChanged: (_) => _markDirty(),
+                onChanged: _onTitleChanged,
               ),
+              if (_prefill case final prefill?)
+                WgerPrefillCard(source: prefill, onClear: _clearPrefill)
+              else if (_suggestsFromWger)
+                WgerSuggestions(
+                  term: _suggestionTerm,
+                  onSelected: _applyPrefill,
+                ),
               const SizedBox(height: 24),
               Text('Tracking', style: textTheme.titleSmall),
               const SizedBox(height: 8),
@@ -219,6 +380,73 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
                   border: OutlineInputBorder(),
                 ),
                 onChanged: (_) => _markDirty(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PhotoField extends ConsumerWidget {
+  const _PhotoField({required this.thumbnail, required this.onTap});
+
+  final Future<String?> thumbnail;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).colorScheme;
+    final store = ref.watch(thumbnailStoreProvider).value;
+    const size = 96.0;
+
+    return Center(
+      child: Tooltip(
+        message: 'Change photo',
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: SizedBox.square(
+                  dimension: size,
+                  child: ColoredBox(
+                    color: colors.surfaceContainerHighest,
+                    child: FutureBuilder(
+                      future: thumbnail,
+                      builder: (context, snapshot) {
+                        final path = snapshot.data;
+                        if (snapshot.connectionState != ConnectionState.done) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+                        final placeholder = Icon(
+                          Icons.add_a_photo_outlined,
+                          color: colors.onSurfaceVariant,
+                        );
+                        if (path == null || store == null) return placeholder;
+                        return Image.file(
+                          store.file(path),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => placeholder,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 4,
+                bottom: 4,
+                child: CircleAvatar(
+                  radius: 14,
+                  backgroundColor: colors.primary,
+                  child: Icon(Icons.edit, size: 16, color: colors.onPrimary),
+                ),
               ),
             ],
           ),

@@ -1,0 +1,265 @@
+{
+ "count": 30,
+ "next": "https://wger.de/api/v2/exerciseinfo/?language__code=en&limit=5&name__search=bench+press&offset=5",
+ "previous": null,
+ "results": [
+  {
+   "id": 73,
+   "uuid": "3717d144-7815-4a97-9a56-956fb889c996",
+   "category": {
+    "id": 11,
+    "name": "Chest"
+   },
+   "muscles": [
+    {
+     "id": 4,
+     "name": "Pectoralis major",
+     "name_en": "Chest",
+     "is_front": true,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-4.c9fa9a228bc8.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-4.955e74ea6083.svg"
+    }
+   ],
+   "muscles_secondary": [
+    {
+     "id": 2,
+     "name": "Anterior deltoid",
+     "name_en": "Shoulders",
+     "is_front": true,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-2.e1e1205a3202.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-2.74ea636ad97b.svg"
+    },
+    {
+     "id": 5,
+     "name": "Triceps brachii",
+     "name_en": "Triceps",
+     "is_front": false,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-5.8a2b934b5486.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-5.68eb84d675a5.svg"
+    }
+   ],
+   "equipment": [
+    {
+     "id": 1,
+     "name": "Barbell"
+    },
+    {
+     "id": 8,
+     "name": "Bench"
+    }
+   ],
+   "images": [
+    {
+     "id": 68,
+     "exercise": 73,
+     "image": "https://wger.de/media/exercise-images/192/Bench-press-1.png",
+     "thumbnails": {
+      "small": "https://wger.de/media/exercise-images/192/Bench-press-1.png.200x200_q85.png",
+      "medium": "https://wger.de/media/exercise-images/192/Bench-press-1.png.400x400_q85.png"
+     },
+     "is_main": true
+    },
+    {
+     "id": 70,
+     "exercise": 73,
+     "image": "https://wger.de/media/exercise-images/192/Bench-press-2.png",
+     "thumbnails": {
+      "small": "https://wger.de/media/exercise-images/192/Bench-press-2.png.200x200_q85.png",
+      "medium": "https://wger.de/media/exercise-images/192/Bench-press-2.png.400x400_q85.png"
+     },
+     "is_main": false
+    }
+   ],
+   "translations": [
+    {
+     "id": 15,
+     "name": "Bankdrücken LH",
+     "exercise": 73,
+     "description": "<p>Lege dich auf die Bank, die Stange direkt über die Augen, die Knie etwas angewinkelt und die Füße fest auf dem Boden. Greife die Stange breit und lasse sie langsam und kontrolliert runter, dabei sollte die Stange kurz auf Brustwarzenhöhe den Körper berühren. Dann das Gewicht wieder hochdrücken bis die Arme durchgestreckt sind.</p>\n<p>Bei hohem Gewicht, empfielt sich natürlich einen <em>Spotter</em> zu haben, der einen hilft falls man die Stange nicht alleine hochdrücken kann.</p>\n<p>Mit der Breite des Griffs kann außerdem kontrolliert werden, welcher Bereich der Brust stärker belastet wird:</p>\n<ul>\n<li>breiter Griff: äußere Brustmuskeln</li>\n<li>enger Griff: innere Brustmuskeln und Trizeps</li>\n</ul>\n",
+     "language": 1
+    },
+    {
+     "id": 192,
+     "name": "Bench Press",
+     "exercise": 73,
+     "description": "<p>Lay down on a bench, the bar should be directly above your eyes, the knees are somewhat angled and the feet are firmly on the floor. Concentrate, breath deeply and grab the bar more than shoulder wide. Bring it slowly down till it briefly touches your chest at the height of your nipples. Push the bar up.</p>\n<p>If you train with a high weight it is advisable to have a <em>spotter</em> that can help you up if you can't lift the weight on your own.</p>\n<p>With the width of the grip you can also control which part of the chest is trained more:</p>\n<ul>\n<li>wide grip: outer chest muscles</li>\n<li>narrow grip: inner chest muscles and triceps</li>\n</ul>\n",
+     "language": 2
+    }
+   ]
+  },
+  {
+   "id": 2536,
+   "uuid": "20d8df5a-c9d6-4c69-bdf2-d97af68ac83f",
+   "category": {
+    "id": 11,
+    "name": "Chest"
+   },
+   "muscles": [
+    {
+     "id": 2,
+     "name": "Anterior deltoid",
+     "name_en": "Shoulders",
+     "is_front": true,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-2.e1e1205a3202.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-2.74ea636ad97b.svg"
+    },
+    {
+     "id": 4,
+     "name": "Pectoralis major",
+     "name_en": "Chest",
+     "is_front": true,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-4.c9fa9a228bc8.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-4.955e74ea6083.svg"
+    },
+    {
+     "id": 5,
+     "name": "Triceps brachii",
+     "name_en": "Triceps",
+     "is_front": false,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-5.8a2b934b5486.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-5.68eb84d675a5.svg"
+    }
+   ],
+   "muscles_secondary": [
+    {
+     "id": 14,
+     "name": "Obliquus externus abdominis",
+     "name_en": "",
+     "is_front": true,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-14.153978038d0b.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-14.afd582849ae9.svg"
+    },
+    {
+     "id": 6,
+     "name": "Rectus abdominis",
+     "name_en": "Abs",
+     "is_front": true,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-6.592f938fa8c7.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-6.370f77c2860e.svg"
+    },
+    {
+     "id": 3,
+     "name": "Serratus anterior",
+     "name_en": "",
+     "is_front": true,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-3.356ffc861a30.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-3.4c09bf907827.svg"
+    }
+   ],
+   "equipment": [
+    {
+     "id": 1,
+     "name": "Barbell"
+    },
+    {
+     "id": 8,
+     "name": "Bench"
+    }
+   ],
+   "images": [],
+   "translations": [
+    {
+     "id": 5007,
+     "name": "Bench Press Isometric",
+     "exercise": 2536,
+     "description": "<p>A bench press isometric hold is a static strength exercise where you pause and hold a barbell or dumbbells either at your chest, mid-press, or at lockout without moving for a set time</p>\n",
+     "language": 2
+    }
+   ]
+  },
+  {
+   "id": 76,
+   "uuid": "3db63138-a047-4a4d-b616-1a0b7dfca105",
+   "category": {
+    "id": 8,
+    "name": "Arms"
+   },
+   "muscles": [
+    {
+     "id": 5,
+     "name": "Triceps brachii",
+     "name_en": "Triceps",
+     "is_front": false,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-5.8a2b934b5486.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-5.68eb84d675a5.svg"
+    }
+   ],
+   "muscles_secondary": [
+    {
+     "id": 2,
+     "name": "Anterior deltoid",
+     "name_en": "Shoulders",
+     "is_front": true,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-2.e1e1205a3202.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-2.74ea636ad97b.svg"
+    },
+    {
+     "id": 4,
+     "name": "Pectoralis major",
+     "name_en": "Chest",
+     "is_front": true,
+     "image_url_main": "https://wger.de/static/images/muscles/main/muscle-4.c9fa9a228bc8.svg",
+     "image_url_secondary": "https://wger.de/static/images/muscles/secondary/muscle-4.955e74ea6083.svg"
+    }
+   ],
+   "equipment": [
+    {
+     "id": 1,
+     "name": "Barbell"
+    },
+    {
+     "id": 8,
+     "name": "Bench"
+    }
+   ],
+   "images": [
+    {
+     "id": 15,
+     "exercise": 76,
+     "image": "https://wger.de/media/exercise-images/88/Narrow-grip-bench-press-1.png",
+     "thumbnails": {
+      "small": "https://wger.de/media/exercise-images/88/Narrow-grip-bench-press-1.png.200x200_q85.png",
+      "medium": "https://wger.de/media/exercise-images/88/Narrow-grip-bench-press-1.png.400x400_q85.png"
+     },
+     "is_main": true
+    },
+    {
+     "id": 648,
+     "exercise": 76,
+     "image": "https://wger.de/media/exercise-images/76/9abec4e4-90ba-44f9-9e6e-5e35f7273078.png",
+     "thumbnails": {
+      "small": "https://wger.de/media/exercise-images/76/9abec4e4-90ba-44f9-9e6e-5e35f7273078.png.200x200_q85.png",
+      "medium": "https://wger.de/media/exercise-images/76/9abec4e4-90ba-44f9-9e6e-5e35f7273078.png.400x400_q85.png"
+     },
+     "is_main": true
+    },
+    {
+     "id": 16,
+     "exercise": 76,
+     "image": "https://wger.de/media/exercise-images/88/Narrow-grip-bench-press-2.png",
+     "thumbnails": {
+      "small": "https://wger.de/media/exercise-images/88/Narrow-grip-bench-press-2.png.200x200_q85.png",
+      "medium": "https://wger.de/media/exercise-images/88/Narrow-grip-bench-press-2.png.400x400_q85.png"
+     },
+     "is_main": false
+    }
+   ],
+   "translations": [
+    {
+     "id": 38,
+     "name": "Bankdrücken Eng",
+     "exercise": 76,
+     "description": "<ul>\n<li><strong>Aufbau:</strong> Lege dich flach auf die Bank und greife die Stange schulterbreit (enger als beim normalen Bankdrücken).</li>\n<li><strong>Abwärtsbewegung:</strong> Senke die Stange kontrolliert zu deiner unteren Brust.</li>\n<li><strong>Technik:</strong> Halte deine Ellbogen eng am Oberkörper, lass sie nicht nach außen wandern.</li>\n<li><strong>Aufwärtsbewegung:</strong> Drücke die Stange gerade nach oben und spanne oben deinen Trizeps an.</li>\n</ul>\n",
+     "language": 1
+    },
+    {
+     "id": 88,
+     "name": "Bench Press Narrow Grip",
+     "exercise": 76,
+     "description": "<ul>\n<li><strong>Setup:</strong> Lie flat on the bench and grip the bar at shoulder-width (closer than a standard bench press).</li>\n<li><strong>Descent:</strong> Lower the bar with control to your lower chest.</li>\n<li><strong>Form:</strong> Keep your elbows tucked in tight against your torso—do not let them flare out.</li>\n<li><strong>Ascent:</strong> Press the bar straight back up, squeezing your triceps at the top.</li>\n</ul>\n",
+     "language": 2
+    }
+   ]
+  }
+ ]
+}
