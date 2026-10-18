@@ -47,7 +47,7 @@ class AppDatabase extends _$AppDatabase {
   /// moves them into [ExerciseThumbnails].
   final Future<Directory> Function()? legacyFilesDirectory;
 
-  static const currentSchemaVersion = 5;
+  static const currentSchemaVersion = 6;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -84,6 +84,10 @@ class AppDatabase extends _$AppDatabase {
           schema.workoutSessions,
           schema.workoutSessions.planId,
         );
+      },
+      from5To6: (m, schema) async {
+        await m.addColumn(schema.settings, schema.settings.restSeconds);
+        await m.addColumn(schema.settings, schema.settings.restAlertsPrompted);
       },
     ),
     beforeOpen: (details) async {

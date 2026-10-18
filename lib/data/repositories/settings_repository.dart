@@ -32,6 +32,12 @@ class SettingsRepository {
   Future<void> setCurrencyCode(String currencyCode) =>
       _write(SettingsTableCompanion(currencyCode: Value(currencyCode)));
 
+  Future<void> setRestSeconds(int seconds) =>
+      _write(SettingsTableCompanion(restSeconds: Value(seconds)));
+
+  Future<void> markRestAlertsPrompted() =>
+      _write(const SettingsTableCompanion(restAlertsPrompted: Value(true)));
+
   Future<void> markBackedUp(DateTime at) =>
       _write(SettingsTableCompanion(lastBackupAt: Value(at)));
 

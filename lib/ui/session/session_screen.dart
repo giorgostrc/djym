@@ -11,6 +11,8 @@ import 'package:loggym/ui/core/clock_provider.dart';
 import 'package:loggym/ui/core/placeholder_body.dart';
 import 'package:loggym/ui/exercises/exercise_picker.dart';
 import 'package:loggym/ui/session/exercise_card.dart';
+import 'package:loggym/ui/session/rest_bar.dart';
+import 'package:loggym/ui/session/rest_timer.dart';
 import 'package:loggym/ui/session/session_summary_sheet.dart';
 
 class SessionScreen extends ConsumerStatefulWidget {
@@ -73,6 +75,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       );
     }
 
+    await ref.read(restTimerProvider.notifier).skipFor(widget.sessionId);
     final summary = await _repository.finishSession(widget.sessionId);
     if (!mounted) return;
     await showModalBottomSheet<void>(
@@ -108,7 +111,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     if (!(confirmed ?? false) || !mounted) return;
 
     final repository = _repository;
+    final restTimer = ref.read(restTimerProvider.notifier);
     context.go(Routes.calendar);
+    await restTimer.skipFor(widget.sessionId);
     await repository.deleteSession(widget.sessionId);
   }
 
@@ -178,6 +183,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
           ],
           bottom: finished ? _SessionTimes(session) : null,
         ),
+        bottomNavigationBar: finished ? null : const RestBar(),
         body: exercises.isEmpty
             ? PlaceholderBody(
                 icon: Icons.fitness_center,

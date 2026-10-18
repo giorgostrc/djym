@@ -25,6 +25,8 @@ const _currencies = [
   'JPY',
 ];
 
+const _restLengths = [0, 30, 60, 90, 120, 150, 180, 240, 300];
+
 final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
 class SettingsScreen extends ConsumerWidget {
@@ -117,6 +119,28 @@ class SettingsScreen extends ConsumerWidget {
                         DropdownMenuItem(value: code, child: Text(code)),
                     ],
                     onChanged: (code) => repository.setCurrencyCode(code!),
+                  ),
+                ),
+                const _SectionHeader('Rest timer'),
+                ListTile(
+                  title: const Text('Rest between sets'),
+                  subtitle: const Text('Starts when you tick a set done'),
+                  trailing: DropdownButton<int>(
+                    value: settings.restSeconds,
+                    underline: const SizedBox.shrink(),
+                    items: [
+                      for (final seconds in {
+                        ..._restLengths,
+                        settings.restSeconds,
+                      })
+                        DropdownMenuItem(
+                          value: seconds,
+                          child: Text(
+                            seconds == 0 ? 'Off' : formatDuration(seconds),
+                          ),
+                        ),
+                    ],
+                    onChanged: (seconds) => repository.setRestSeconds(seconds!),
                   ),
                 ),
                 const _SectionHeader('Data'),

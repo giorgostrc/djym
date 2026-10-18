@@ -120,6 +120,9 @@ class SettingsTable extends Table {
   TextColumn get currencyCode =>
       text().withLength(min: 3, max: 3).withDefault(const Constant('EUR'))();
   DateTimeColumn get lastBackupAt => dateTime().nullable()();
+  IntColumn get restSeconds => integer().withDefault(const Constant(180))();
+  BoolColumn get restAlertsPrompted =>
+      boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};

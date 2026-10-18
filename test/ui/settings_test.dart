@@ -110,6 +110,31 @@ void main() {
     await unmountApp(tester);
   });
 
+  testWidgets('the rest length starts at 3 minutes and can be changed', (
+    tester,
+  ) async {
+    await openSettings(tester);
+
+    await tester.scrollUntilVisible(
+      find.text('3:00'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(SettingsScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(find.text('3:00'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1:30').last);
+    await tester.pumpAndSettle();
+
+    expect((await settings()).restSeconds, 90);
+
+    await unmountApp(tester);
+  });
+
   test('describes how long ago the last backup was', () {
     final now = DateTime(2026, 10, 18, 9);
 

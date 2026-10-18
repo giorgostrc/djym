@@ -5,6 +5,8 @@ import 'package:loggym/data/repositories/workout_session_repository.dart';
 import 'package:loggym/domain/unit_system.dart';
 import 'package:loggym/routing/routes.dart';
 import 'package:loggym/ui/core/clock_provider.dart';
+import 'package:loggym/ui/session/rest_bar.dart';
+import 'package:loggym/ui/session/rest_timer.dart';
 
 /// Shown above the tab bar on every tab while a workout runs.
 class WorkoutBanner extends ConsumerWidget {
@@ -18,6 +20,8 @@ class WorkoutBanner extends ConsumerWidget {
     final colors = Theme.of(context).colorScheme;
     final now = ref.watch(clockProvider).value ?? DateTime.now();
     final elapsed = now.difference(session.startedAt).inSeconds;
+    final rest = ref.watch(runningRestProvider);
+    final restLeft = rest?.remainingAt(DateTime.now());
 
     return Material(
       color: colors.primaryContainer,
@@ -30,11 +34,16 @@ class WorkoutBanner extends ConsumerWidget {
             child: Row(
               spacing: 12,
               children: [
-                Icon(Icons.fitness_center, color: colors.onPrimaryContainer),
+                Icon(
+                  rest == null ? Icons.fitness_center : Icons.timer_outlined,
+                  color: colors.onPrimaryContainer,
+                ),
                 Expanded(
                   child: Text(
-                    'Workout in progress · '
-                    '${formatDuration(elapsed < 0 ? 0 : elapsed)}',
+                    restLeft == null
+                        ? 'Workout in progress · '
+                              '${formatDuration(elapsed < 0 ? 0 : elapsed)}'
+                        : 'Resting · ${formatRestLeft(restLeft)}',
                     style: TextStyle(color: colors.onPrimaryContainer),
                   ),
                 ),

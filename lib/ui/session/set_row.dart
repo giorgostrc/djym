@@ -6,6 +6,7 @@ import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/repositories/workout_session_repository.dart';
 import 'package:loggym/domain/tracking_type.dart';
 import 'package:loggym/domain/unit_system.dart';
+import 'package:loggym/ui/session/rest_timer.dart';
 
 /// One editable set. Every change is written straight to the database, so
 /// the controllers are seeded once and never reset from later rebuilds.
@@ -58,13 +59,17 @@ class _SetRowState extends ConsumerState<SetRow> {
       .read(workoutSessionRepositoryProvider)
       .updateSet(widget.set.id, changes);
 
-  Future<void> _toggleDone() => _write(
-    ExerciseSetsCompanion(
-      completedAt: Value(
-        widget.set.completedAt == null ? DateTime.now() : null,
+  Future<void> _toggleDone() async {
+    final completing = widget.set.completedAt == null;
+    await _write(
+      ExerciseSetsCompanion(
+        completedAt: Value(completing ? DateTime.now() : null),
       ),
-    ),
-  );
+    );
+    if (completing && mounted) {
+      await startRestAfterSet(context, ref, widget.set.sessionId);
+    }
+  }
 
   Future<void> _delete() async {
     final repository = ref.read(workoutSessionRepositoryProvider);

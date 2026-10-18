@@ -11,19 +11,24 @@ import 'package:loggym/data/database/database_provider.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
 import 'package:loggym/data/repositories/settings_repository.dart';
 import 'package:loggym/data/repositories/workout_session_repository.dart';
+import 'package:loggym/data/services/rest_alerts.dart';
 import 'package:loggym/data/services/wger_client.dart';
 import 'package:loggym/domain/tracking_type.dart';
 import 'package:loggym/domain/unit_system.dart';
 import 'package:loggym/ui/core/clock_provider.dart';
 import 'package:loggym/ui/core/keep_screen_on.dart';
 
+import '../fakes/fake_rest_alerts.dart';
+
 void main() {
   late AppDatabase database;
   late List<bool> screenAwake;
+  late FakeRestAlerts restAlerts;
 
   setUp(() async {
     database = AppDatabase(NativeDatabase.memory());
     screenAwake = [];
+    restAlerts = FakeRestAlerts();
     await ExerciseRepository(database).saveExercise(
       title: 'Squat',
       trackingType: TrackingType.weightReps,
@@ -42,6 +47,7 @@ void main() {
           keepScreenOnProvider.overrideWithValue(
             ({required on}) async => screenAwake.add(on),
           ),
+          restAlertsProvider.overrideWithValue(restAlerts),
           wgerClientProvider.overrideWithValue(
             WgerClient(
               MockClient((_) async => http.Response('{"results": []}', 200)),
@@ -97,6 +103,73 @@ void main() {
     expect(sets.single.completedAt, isNotNull);
     expect(find.text('Start workout'), findsOneWidget);
     expect(screenAwake, [true, false]);
+
+    await unmountApp(tester);
+  });
+
+  testWidgets('a done set starts the rest, which can be adjusted', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startWorkoutWithSquat(tester);
+
+    await tester.tap(find.byTooltip('Mark set done'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('3:00'), findsOneWidget);
+    expect(restAlerts.scheduled, hasLength(1));
+
+    await tester.tap(find.text('+15 s'));
+    await tester.pump();
+
+    expect(find.text('3:15'), findsOneWidget);
+    expect(restAlerts.scheduled, hasLength(2));
+
+    await tester.tap(find.text('Skip'));
+    await tester.pump();
+
+    expect(find.text('Skip'), findsNothing);
+    expect(restAlerts.cancelled, isTrue);
+
+    await unmountApp(tester);
+  });
+
+  testWidgets('the first rest asks once before alerting', (tester) async {
+    restAlerts.notificationsEnabled = false;
+    await pumpApp(tester);
+    await startWorkoutWithSquat(tester);
+
+    await tester.tap(find.byTooltip('Mark set done'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Alert when rest is over?'), findsOneWidget);
+
+    await tester.tap(find.text('Allow'));
+    await tester.pumpAndSettle();
+
+    expect(restAlerts.permissionRequests, 1);
+    expect(restAlerts.scheduled, hasLength(2));
+
+    await tester.tap(find.text('Add set'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Mark set done').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Alert when rest is over?'), findsNothing);
+
+    await unmountApp(tester);
+  });
+
+  testWidgets('no rest starts when the rest timer is off', (tester) async {
+    await SettingsRepository(database).setRestSeconds(0);
+    await pumpApp(tester);
+    await startWorkoutWithSquat(tester);
+
+    await tester.tap(find.byTooltip('Mark set done'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Skip'), findsNothing);
+    expect(restAlerts.scheduled, isEmpty);
 
     await unmountApp(tester);
   });
