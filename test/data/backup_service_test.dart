@@ -10,8 +10,6 @@ import 'package:loggym/data/repositories/workout_session_repository.dart';
 import 'package:loggym/data/services/backup_service.dart';
 import 'package:loggym/domain/tracking_type.dart';
 
-import '../drift/app_database/generated/schema_v3.dart' as v3;
-
 void main() {
   late Directory root;
   late BackupService service;
@@ -91,29 +89,6 @@ void main() {
       await updates.cancel();
     },
   );
-
-  test('restores a backup from an older schema version', () async {
-    final old = v3.DatabaseAtV3(NativeDatabase(databaseFile));
-    await old.customStatement('PRAGMA user_version = 3');
-    await old
-        .into(old.exercises)
-        .insert(
-          const v3.ExercisesData(
-            id: 1,
-            title: 'Old squat',
-            trackingType: 'weightReps',
-            createdAt: '2026-10-01T10:00:00.000',
-          ),
-        );
-    await old.close();
-    final live = AppDatabase(NativeDatabase.memory());
-    addTearDown(live.close);
-
-    await service.restore(live, databaseFile);
-
-    final exercise = await live.select(live.exercises).getSingle();
-    expect(exercise.title, 'Old squat');
-  });
 
   test('rejects a file that is not a backup', () {
     final notBackup = File('${root.path}/notes.txt')..writeAsStringSync('hi');

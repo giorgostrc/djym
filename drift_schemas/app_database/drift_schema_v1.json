@@ -59,16 +59,6 @@
             "dsl_features": []
           },
           {
-            "name": "thumbnail_path",
-            "getter_name": "thumbnailPath",
-            "moor_type": "string",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
             "name": "external_id",
             "getter_name": "externalId",
             "moor_type": "string",
@@ -83,6 +73,30 @@
             "dsl_features": [
               "unique"
             ]
+          },
+          {
+            "name": "tracking_type",
+            "getter_name": "trackingType",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('\\'weightReps\\'')",
+            "default_client_dart": null,
+            "dsl_features": [],
+            "type_converter": {
+              "dart_expr": "const EnumNameConverter<TrackingType>(TrackingType.values)",
+              "dart_type_name": "TrackingType"
+            }
+          },
+          {
+            "name": "archived_at",
+            "getter_name": "archivedAt",
+            "moor_type": "dateTime",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
           },
           {
             "name": "created_at",
@@ -102,6 +116,61 @@
     },
     {
       "id": 1,
+      "references": [
+        0
+      ],
+      "type": "table",
+      "data": {
+        "name": "exercise_thumbnails",
+        "was_declared_in_moor": false,
+        "columns": [
+          {
+            "name": "exercise_id",
+            "getter_name": "exerciseId",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES exercises (id) ON DELETE CASCADE",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES exercises (id) ON DELETE CASCADE"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "exercises",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": "cascade"
+                }
+              }
+            ]
+          },
+          {
+            "name": "image",
+            "getter_name": "image",
+            "moor_type": "blob",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          }
+        ],
+        "is_virtual": false,
+        "without_rowid": false,
+        "constraints": [],
+        "explicit_pk": [
+          "exercise_id"
+        ]
+      }
+    },
+    {
+      "id": 2,
       "references": [],
       "type": "table",
       "data": {
@@ -147,10 +216,10 @@
       }
     },
     {
-      "id": 2,
+      "id": 3,
       "references": [
         0,
-        1
+        2
       ],
       "type": "table",
       "data": {
@@ -236,7 +305,7 @@
       }
     },
     {
-      "id": 3,
+      "id": 4,
       "references": [],
       "type": "table",
       "data": {
@@ -293,9 +362,9 @@
       }
     },
     {
-      "id": 4,
+      "id": 5,
       "references": [
-        3,
+        4,
         0
       ],
       "type": "table",
@@ -405,7 +474,7 @@
       }
     },
     {
-      "id": 5,
+      "id": 6,
       "references": [],
       "type": "table",
       "data": {
@@ -501,8 +570,11 @@
       }
     },
     {
-      "id": 6,
-      "references": [],
+      "id": 7,
+      "references": [
+        4,
+        6
+      ],
       "type": "table",
       "data": {
         "name": "workout_sessions",
@@ -522,6 +594,58 @@
             "default_client_dart": null,
             "dsl_features": [
               "auto-increment"
+            ]
+          },
+          {
+            "name": "plan_id",
+            "getter_name": "planId",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES workout_plans (id) ON DELETE SET NULL",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES workout_plans (id) ON DELETE SET NULL"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "workout_plans",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": "setNull"
+                }
+              }
+            ]
+          },
+          {
+            "name": "subscription_id",
+            "getter_name": "subscriptionId",
+            "moor_type": "int",
+            "nullable": true,
+            "customConstraints": null,
+            "defaultConstraints": "REFERENCES gym_subscriptions (id) ON DELETE SET NULL",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "REFERENCES gym_subscriptions (id) ON DELETE SET NULL"
+            },
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "foreign_key": {
+                  "to": {
+                    "table": "gym_subscriptions",
+                    "column": "id"
+                  },
+                  "initially_deferred": false,
+                  "on_update": null,
+                  "on_delete": "setNull"
+                }
+              }
             ]
           },
           {
@@ -561,9 +685,9 @@
       }
     },
     {
-      "id": 7,
+      "id": 8,
       "references": [
-        6,
+        7,
         0
       ],
       "type": "table",
@@ -680,9 +804,29 @@
             "dsl_features": []
           },
           {
+            "name": "distance_meters",
+            "getter_name": "distanceMeters",
+            "moor_type": "double",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
             "name": "comment",
             "getter_name": "comment",
             "moor_type": "string",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "completed_at",
+            "getter_name": "completedAt",
+            "moor_type": "dateTime",
             "nullable": true,
             "customConstraints": null,
             "default_dart": null,
@@ -696,7 +840,7 @@
       }
     },
     {
-      "id": 8,
+      "id": 9,
       "references": [],
       "type": "table",
       "data": {
@@ -728,36 +872,6 @@
             ]
           },
           {
-            "name": "first_name",
-            "getter_name": "firstName",
-            "moor_type": "string",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "last_name",
-            "getter_name": "lastName",
-            "moor_type": "string",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
-            "name": "email",
-            "getter_name": "email",
-            "moor_type": "string",
-            "nullable": true,
-            "customConstraints": null,
-            "default_dart": null,
-            "default_client_dart": null,
-            "dsl_features": []
-          },
-          {
             "name": "theme_preference",
             "getter_name": "themePreference",
             "moor_type": "string",
@@ -784,6 +898,57 @@
               "dart_expr": "const EnumNameConverter<UnitSystem>(UnitSystem.values)",
               "dart_type_name": "UnitSystem"
             }
+          },
+          {
+            "name": "currency_code",
+            "getter_name": "currencyCode",
+            "moor_type": "string",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('\\'EUR\\'')",
+            "default_client_dart": null,
+            "dsl_features": [
+              {
+                "allowed-lengths": {
+                  "min": 3,
+                  "max": 3
+                }
+              }
+            ]
+          },
+          {
+            "name": "last_backup_at",
+            "getter_name": "lastBackupAt",
+            "moor_type": "dateTime",
+            "nullable": true,
+            "customConstraints": null,
+            "default_dart": null,
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rest_seconds",
+            "getter_name": "restSeconds",
+            "moor_type": "int",
+            "nullable": false,
+            "customConstraints": null,
+            "default_dart": "const CustomExpression('180')",
+            "default_client_dart": null,
+            "dsl_features": []
+          },
+          {
+            "name": "rest_alerts_prompted",
+            "getter_name": "restAlertsPrompted",
+            "moor_type": "bool",
+            "nullable": false,
+            "customConstraints": null,
+            "defaultConstraints": "CHECK (\"rest_alerts_prompted\" IN (0, 1))",
+            "dialectAwareDefaultConstraints": {
+              "sqlite": "CHECK (\"rest_alerts_prompted\" IN (0, 1))"
+            },
+            "default_dart": "const CustomExpression('0')",
+            "default_client_dart": null,
+            "dsl_features": []
           }
         ],
         "is_virtual": false,
@@ -801,7 +966,16 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"exercises\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"title\" TEXT NOT NULL, \"form_guidance\" TEXT NULL, \"thumbnail_path\" TEXT NULL, \"external_id\" TEXT NULL UNIQUE, \"created_at\" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"exercises\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"title\" TEXT NOT NULL, \"form_guidance\" TEXT NULL, \"external_id\" TEXT NULL UNIQUE, \"tracking_type\" TEXT NOT NULL DEFAULT 'weightReps', \"archived_at\" TEXT NULL, \"created_at\" TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP));"
+        }
+      ]
+    },
+    {
+      "name": "exercise_thumbnails",
+      "sql": [
+        {
+          "dialect": "sqlite",
+          "sql": "CREATE TABLE IF NOT EXISTS \"exercise_thumbnails\" (\"exercise_id\" INTEGER NOT NULL REFERENCES exercises (id) ON DELETE CASCADE, \"image\" BLOB NOT NULL, PRIMARY KEY (\"exercise_id\"));"
         }
       ]
     },
@@ -855,7 +1029,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"workout_sessions\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"started_at\" TEXT NOT NULL, \"finished_at\" TEXT NULL, \"notes\" TEXT NULL);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"workout_sessions\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"plan_id\" INTEGER NULL REFERENCES workout_plans (id) ON DELETE SET NULL, \"subscription_id\" INTEGER NULL REFERENCES gym_subscriptions (id) ON DELETE SET NULL, \"started_at\" TEXT NOT NULL, \"finished_at\" TEXT NULL, \"notes\" TEXT NULL);"
         }
       ]
     },
@@ -864,7 +1038,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"exercise_sets\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"session_id\" INTEGER NOT NULL REFERENCES workout_sessions (id) ON DELETE CASCADE, \"exercise_id\" INTEGER NOT NULL REFERENCES exercises (id), \"position\" INTEGER NOT NULL, \"reps\" INTEGER NULL, \"weight_kg\" REAL NULL, \"duration_seconds\" INTEGER NULL, \"comment\" TEXT NULL);"
+          "sql": "CREATE TABLE IF NOT EXISTS \"exercise_sets\" (\"id\" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, \"session_id\" INTEGER NOT NULL REFERENCES workout_sessions (id) ON DELETE CASCADE, \"exercise_id\" INTEGER NOT NULL REFERENCES exercises (id), \"position\" INTEGER NOT NULL, \"reps\" INTEGER NULL, \"weight_kg\" REAL NULL, \"duration_seconds\" INTEGER NULL, \"distance_meters\" REAL NULL, \"comment\" TEXT NULL, \"completed_at\" TEXT NULL);"
         }
       ]
     },
@@ -873,7 +1047,7 @@
       "sql": [
         {
           "dialect": "sqlite",
-          "sql": "CREATE TABLE IF NOT EXISTS \"settings\" (\"id\" INTEGER NOT NULL DEFAULT 1 CHECK(\"id\" = 1), \"first_name\" TEXT NULL, \"last_name\" TEXT NULL, \"email\" TEXT NULL, \"theme_preference\" TEXT NOT NULL DEFAULT 'system', \"unit_system\" TEXT NOT NULL DEFAULT 'metric', PRIMARY KEY (\"id\"));"
+          "sql": "CREATE TABLE IF NOT EXISTS \"settings\" (\"id\" INTEGER NOT NULL DEFAULT 1 CHECK(\"id\" = 1), \"theme_preference\" TEXT NOT NULL DEFAULT 'system', \"unit_system\" TEXT NOT NULL DEFAULT 'metric', \"currency_code\" TEXT NOT NULL DEFAULT 'EUR', \"last_backup_at\" TEXT NULL, \"rest_seconds\" INTEGER NOT NULL DEFAULT 180, \"rest_alerts_prompted\" INTEGER NOT NULL DEFAULT 0 CHECK (\"rest_alerts_prompted\" IN (0, 1)), PRIMARY KEY (\"id\"));"
         }
       ]
     }

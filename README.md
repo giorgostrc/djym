@@ -57,6 +57,8 @@ drift_schemas/      Committed schema snapshots, one per schema version
 
 Drift's `make-migrations` workflow keeps a JSON snapshot per schema version and generates typed migration steps and tests.
 
+The schema was reset to v1 before the first real install, so there are no earlier versions to migrate from yet.
+
 1. Change the tables in `lib/data/database/tables.dart`.
 2. Bump `schemaVersion` in `lib/data/database/app_database.dart`.
 3. Run `dart run drift_dev make-migrations`.
