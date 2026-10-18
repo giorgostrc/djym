@@ -20,15 +20,6 @@ class SettingsRepository {
   Future<void> setUnitSystem(UnitSystem unitSystem) =>
       _write(SettingsTableCompanion(unitSystem: Value(unitSystem)));
 
-  Future<void> setFirstName(String? firstName) =>
-      _write(SettingsTableCompanion(firstName: Value(firstName)));
-
-  Future<void> setLastName(String? lastName) =>
-      _write(SettingsTableCompanion(lastName: Value(lastName)));
-
-  Future<void> setEmail(String? email) =>
-      _write(SettingsTableCompanion(email: Value(email)));
-
   Future<void> setCurrencyCode(String currencyCode) =>
       _write(SettingsTableCompanion(currencyCode: Value(currencyCode)));
 

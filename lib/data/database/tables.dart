@@ -115,9 +115,6 @@ class SettingsTable extends Table {
 
   IntColumn get id =>
       integer().withDefault(const Constant(1)).check(id.equals(1))();
-  TextColumn get firstName => text().nullable()();
-  TextColumn get lastName => text().nullable()();
-  TextColumn get email => text().nullable()();
   TextColumn get themePreference => textEnum<ThemePreference>().withDefault(
     Constant(ThemePreference.system.name),
   )();

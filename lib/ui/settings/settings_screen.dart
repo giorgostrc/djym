@@ -4,7 +4,6 @@ import 'package:loggym/data/repositories/settings_repository.dart';
 import 'package:loggym/domain/theme_preference.dart';
 import 'package:loggym/domain/unit_system.dart';
 import 'package:loggym/ui/settings/backup_tiles.dart';
-import 'package:loggym/ui/settings/profile_field.dart';
 
 const _currencies = [
   'EUR',
@@ -27,8 +26,6 @@ const _currencies = [
 
 const _restLengths = [0, 30, 60, 90, 120, 150, 180, 240, 300];
 
-final _emailPattern = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -44,28 +41,6 @@ class SettingsScreen extends ConsumerWidget {
           : ListView(
               padding: const EdgeInsets.only(bottom: 24),
               children: [
-                const _SectionHeader('Profile'),
-                ProfileField(
-                  label: 'First name',
-                  initialValue: settings.firstName,
-                  onSave: repository.setFirstName,
-                ),
-                ProfileField(
-                  label: 'Last name',
-                  initialValue: settings.lastName,
-                  onSave: repository.setLastName,
-                ),
-                ProfileField(
-                  label: 'Email',
-                  initialValue: settings.email,
-                  keyboardType: TextInputType.emailAddress,
-                  textCapitalization: TextCapitalization.none,
-                  validate: (email) =>
-                      email.isEmpty || _emailPattern.hasMatch(email)
-                      ? null
-                      : 'Enter a valid email address',
-                  onSave: repository.setEmail,
-                ),
                 const _SectionHeader('Appearance'),
                 ListTile(
                   title: const Text('Theme'),

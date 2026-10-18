@@ -12,6 +12,7 @@ import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v4.dart' as v4;
 import 'generated/schema_v6.dart' as v6;
 import 'generated/schema_v7.dart' as v7;
+import 'generated/schema_v8.dart' as v8;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -209,4 +210,35 @@ void main() {
       );
     },
   );
+
+  test('v7 to v8 drops the profile and keeps every other setting', () async {
+    await verifier.testWithDataIntegrity(
+      oldVersion: 7,
+      newVersion: 8,
+      createOld: v7.DatabaseAtV7.new,
+      createNew: v8.DatabaseAtV8.new,
+      openTestedDatabase: AppDatabase.new,
+      createItems: (batch, oldDb) {
+        batch.insert(
+          oldDb.settings,
+          const v7.SettingsData(
+            id: 1,
+            firstName: 'Alex',
+            email: 'alex@example.com',
+            themePreference: 'dark',
+            unitSystem: 'imperial',
+            currencyCode: 'GBP',
+            restSeconds: 90,
+            restAlertsPrompted: 1,
+          ),
+        );
+      },
+      validateItems: (newDb) async {
+        final settings = await newDb.select(newDb.settings).getSingle();
+        expect(settings.themePreference, 'dark');
+        expect(settings.currencyCode, 'GBP');
+        expect(settings.restSeconds, 90);
+      },
+    );
+  });
 }

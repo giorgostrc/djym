@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loggym/data/repositories/plan_repository.dart';
-import 'package:loggym/data/repositories/settings_repository.dart';
 import 'package:loggym/data/repositories/workout_session_repository.dart';
 import 'package:loggym/domain/unit_system.dart';
 import 'package:loggym/routing/routes.dart';
@@ -63,7 +62,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         if (isSameDay(overview.session.startedAt, selectedDay)) overview,
     ];
     final hasActiveSession = ref.watch(activeSessionProvider).value != null;
-    final firstName = ref.watch(settingsProvider).value?.firstName?.trim();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
@@ -93,8 +91,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       body: ListView(
         padding: const EdgeInsets.only(bottom: 88),
         children: [
-          if (firstName != null && firstName.isNotEmpty)
-            _Greeting(firstName: firstName),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
             child: SegmentedButton<bool>(
@@ -214,30 +210,6 @@ CalendarStyle _calendarStyle(ThemeData theme) {
       fontWeight: FontWeight.w600,
     ),
   );
-}
-
-class _Greeting extends StatelessWidget {
-  const _Greeting({required this.firstName});
-
-  final String firstName;
-
-  @override
-  Widget build(BuildContext context) {
-    final hour = DateTime.now().hour;
-    final partOfDay = hour < 12
-        ? 'morning'
-        : hour < 18
-        ? 'afternoon'
-        : 'evening';
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: Text(
-        'Good $partOfDay, $firstName',
-        style: Theme.of(context).textTheme.headlineSmall,
-      ),
-    );
-  }
 }
 
 class _DayHeader extends StatelessWidget {

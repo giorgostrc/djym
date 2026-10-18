@@ -73,22 +73,11 @@ void main() {
     await sessions.finishSession(id);
   }
 
-  testWidgets('greets by first name once one is set', (tester) async {
-    await database
-        .update(database.settingsTable)
-        .write(const SettingsTableCompanion(firstName: Value('Alex')));
+  testWidgets('opens on today with a way to start a workout', (
+    tester,
+  ) async {
     await pumpApp(tester);
 
-    expect(find.textContaining(', Alex'), findsOneWidget);
-    expect(find.textContaining('Good '), findsOneWidget);
-
-    await unmountApp(tester);
-  });
-
-  testWidgets('shows no greeting without a first name', (tester) async {
-    await pumpApp(tester);
-
-    expect(find.textContaining('Good '), findsNothing);
     expect(find.text('Today'), findsOneWidget);
     expect(find.text('No workouts'), findsOneWidget);
     expect(find.text('Start workout'), findsOneWidget);

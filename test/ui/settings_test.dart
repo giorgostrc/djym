@@ -32,60 +32,8 @@ void main() {
     await tester.pump(Duration.zero);
   }
 
-  Finder field(String label) => find.widgetWithText(TextField, label);
-
   Future<Settings> settings() =>
       database.select(database.settingsTable).getSingle();
-
-  testWidgets('a first name is saved and greets on the calendar', (
-    tester,
-  ) async {
-    await openSettings(tester);
-
-    await tester.enterText(field('First name'), 'Alex');
-    await tester.pump();
-    await tester.tap(find.text('Calendar'));
-    await tester.pumpAndSettle();
-
-    expect((await settings()).firstName, 'Alex');
-    expect(find.textContaining(', Alex'), findsOneWidget);
-
-    await unmountApp(tester);
-  });
-
-  testWidgets('an invalid email is flagged on leaving and not saved', (
-    tester,
-  ) async {
-    await openSettings(tester);
-
-    await tester.enterText(field('Email'), 'alex@');
-    await tester.tap(field('Last name'));
-    await tester.pump();
-
-    expect(find.text('Enter a valid email address'), findsOneWidget);
-    expect((await settings()).email, isNull);
-
-    await tester.enterText(field('Email'), 'alex@example.com');
-    await tester.pump();
-
-    expect(find.text('Enter a valid email address'), findsNothing);
-    expect((await settings()).email, 'alex@example.com');
-
-    await unmountApp(tester);
-  });
-
-  testWidgets('clearing a field removes the saved value', (tester) async {
-    await openSettings(tester);
-
-    await tester.enterText(field('Last name'), 'Smith');
-    await tester.pump();
-    await tester.enterText(field('Last name'), '');
-    await tester.pump();
-
-    expect((await settings()).lastName, isNull);
-
-    await unmountApp(tester);
-  });
 
   testWidgets('the currency is chosen from a list', (tester) async {
     await openSettings(tester);
