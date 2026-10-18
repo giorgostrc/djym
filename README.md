@@ -1,84 +1,61 @@
 # djym
 
-Local-first gym session logger for Android and iOS.
+![djym logo](assets/brand/3.0x/djinn.png)
 
-## Stack
+djym is *djinn* + *gym*: a friendly genie who helps you lift.
+A local-first gym logger for Android and iOS.
+Plan your workouts, log every set, and watch your lifts go up. No account and no cloud: your data stays on your phone.
 
-| Concern | Choice |
-|---|---|
-| UI | Flutter (Material 3) |
-| State | Riverpod 3 (manual providers, no codegen) |
-| Navigation | go_router (`StatefulShellRoute` for the bottom tabs) |
-| Persistence | Drift on SQLite |
-| Calendar | table_calendar |
-| Lints | very_good_analysis |
+| Logging a workout | Exercise progress | Year in review |
+|---|---|---|
+| ![Logging a workout](docs/screenshots/workout.png) | ![Exercise progress](docs/screenshots/exercise-detail.png) | ![Year in review](docs/screenshots/year.png) |
 
-## Setup
+## Features
 
-Requires Flutter 3.38.5 (stable) and, on Linux hosts, `libsqlite3-dev` for running tests.
+**Log workouts as you train**
+- Start from a plan or an empty workout and tick sets off as you go.
+- Each exercise shows what you did last time and your best, so you always know what to beat.
+- Track weight × reps, reps only, timed holds, or distance and time.
+- A rest timer starts when you finish a set and can alert you even when the phone is locked.
+- The screen stays on during a workout.
+
+**See your progress**
+- Each exercise shows your personal best, estimated one-rep max and a progress chart.
+- The calendar marks every training day, and a year view sums up workouts, hours, volume and streaks.
+
+**Plans and exercises**
+- Build reusable plans such as Push, Pull and Legs, with target sets per exercise.
+- Search the open [wger](https://wger.de) exercise database, or add your own exercises with muscles, form cues and a photo.
+
+**Gym subscriptions**
+- Track memberships and see what each workout really costs you.
+
+**Optional AI assistant**
+- Fill in tracking type, muscles and form cues for new exercises automatically.
+- Bring your own API key from OpenAI, Anthropic or Gemini. AI stays off until you add one.
+
+**Your data, your phone**
+- Everything is stored on the device.
+- Export a single backup file, photos included, and restore it on any phone.
+- Your API key is kept in the system keystore and never goes into backups.
+- Light and dark themes, metric or imperial units, and any currency.
+
+## Screenshots
+
+| Calendar | Workout details | Plans |
+|---|---|---|
+| ![Calendar](docs/screenshots/calendar.png) | ![Workout details](docs/screenshots/session-detail.png) | ![Plans](docs/screenshots/plans.png) |
+| **Exercise library** | **Dark theme** | |
+| ![Exercise library](docs/screenshots/exercises.png) | ![Dark theme](docs/screenshots/exercise-dark.png) | |
+
+## Install
+
+Build the Android APK with [Flutter](https://docs.flutter.dev/get-started/install):
 
 ```bash
 flutter pub get
 dart run build_runner build --force-jit
-flutter run
+flutter build apk --release
 ```
 
-`--force-jit` is needed because `sqlite3` uses native build hooks, which the default AOT build script compilation does not support.
-
-## Development
-
-```bash
-dart run build_runner watch --force-jit   # regenerate *.g.dart on save
-dart format lib test
-flutter analyze
-flutter test
-```
-
-## Project structure
-
-Follows the [Flutter app architecture guide](https://docs.flutter.dev/app-architecture): a data layer exposing repositories and a UI layer consuming them through Riverpod providers.
-
-```
-lib/
-  data/
-    database/       Drift tables, database class, database provider
-    repositories/   Data access exposed to the UI as providers
-  domain/           Pure Dart types and business logic
-  routing/          Route paths and the GoRouter configuration
-  ui/
-    core/           Theme, app shell, shared widgets
-    <feature>/      One folder per screen
-drift_schemas/      Committed schema snapshots, one per schema version
-```
-
-`lib/data/database/` and `lib/domain/` must not import Flutter: Drift runs the database file in a plain Dart isolate when exporting schemas.
-
-## Schema migrations
-
-Drift's `make-migrations` workflow keeps a JSON snapshot per schema version and generates typed migration steps and tests.
-
-The schema was reset to v1 before the first real install, so there are no earlier versions to migrate from yet.
-
-1. Change the tables in `lib/data/database/tables.dart`.
-2. Bump `schemaVersion` in `lib/data/database/app_database.dart`.
-3. Run `dart run drift_dev make-migrations`.
-4. Implement the generated `fromXToY` step in `onUpgrade: stepByStep(...)`.
-5. Run `flutter test test/drift` to verify the migration against the snapshots.
-
-Commit `drift_schemas/`, `*.steps.dart` and `test/drift/`; only `*.g.dart` is ignored.
-
-## Conventions
-
-- Weights are stored in kilograms and converted for display.
-- Money is stored as integer cents.
-- A single `settings` row is seeded on database creation, so the backup file also carries user preferences.
-- Exercise photos are stored as JPEG/PNG blobs in `exercise_thumbnails` (one row per exercise, user photos capped at 256 px), so a backup is the single database file.
-- AI features use the user's own API key (OpenAI, Anthropic or Gemini), stored with `flutter_secure_storage` in the Android Keystore, never in the database or backups. `AiClient` calls each provider's REST API directly and always requests JSON matching a schema; features stay hidden while no key is set.
-
-## Brand
-
-djym (djinn + gym) uses five colours, mapped to Material roles in `lib/ui/core/app_theme.dart`:
-deep teal `#1A535C`, turquoise `#4ECDC4`, mint `#F7FFF7`, coral `#FF6B6B`, sunshine `#FFE66D`.
-The dark theme sits on two neutral grey-blue shades: ink `#141E24` (background) and slate `#22313A` (cards).
-Type is Roboto, the platform font; headings and the wordmark use heavier weights.
-Launcher icons and the in-app logo come from `tool/brand/djym-icon.jpg` via `tool/brand/make_icons.py`.
+Then install `build/app/outputs/flutter-apk/app-release.apk` on your phone.
