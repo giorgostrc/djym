@@ -156,7 +156,8 @@ final statsRepositoryProvider = Provider<StatsRepository>(
   (ref) => StatsRepository(ref.watch(appDatabaseProvider)),
 );
 
-final StreamProviderFamily<YearStats, int> yearStatsProvider =
-    StreamProvider.family<YearStats, int>(
+final StreamProviderFamily<YearStats, int> yearStatsProvider = StreamProvider
+    .autoDispose
+    .family<YearStats, int>(
       (ref, year) => ref.watch(statsRepositoryProvider).watchYear(year),
     );

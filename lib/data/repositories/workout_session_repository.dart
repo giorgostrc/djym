@@ -398,8 +398,8 @@ final workoutSessionRepositoryProvider = Provider<WorkoutSessionRepository>(
 );
 
 final StreamProviderFamily<List<SessionOverview>, DateTime>
-sessionsInMonthProvider =
-    StreamProvider.family<List<SessionOverview>, DateTime>(
+sessionsInMonthProvider = StreamProvider.autoDispose
+    .family<List<SessionOverview>, DateTime>(
       (ref, month) => ref
           .watch(workoutSessionRepositoryProvider)
           .watchSessionsInMonth(month),
@@ -410,21 +410,22 @@ final activeSessionProvider = StreamProvider<WorkoutSession?>(
 );
 
 final StreamProviderFamily<WorkoutSession?, int> sessionProvider =
-    StreamProvider.family<WorkoutSession?, int>(
+    StreamProvider.autoDispose.family<WorkoutSession?, int>(
       (ref, sessionId) =>
           ref.watch(workoutSessionRepositoryProvider).watchSession(sessionId),
     );
 
 final StreamProviderFamily<List<SessionExercise>, int>
-sessionExercisesProvider = StreamProvider.family<List<SessionExercise>, int>(
-  (ref, sessionId) => ref
-      .watch(workoutSessionRepositoryProvider)
-      .watchSessionExercises(sessionId),
-);
+sessionExercisesProvider = StreamProvider.autoDispose
+    .family<List<SessionExercise>, int>(
+      (ref, sessionId) => ref
+          .watch(workoutSessionRepositoryProvider)
+          .watchSessionExercises(sessionId),
+    );
 
 final FutureProviderFamily<ExerciseRecords, (Exercise, int)>
-exerciseRecordsProvider =
-    FutureProvider.family<ExerciseRecords, (Exercise, int)>(
+exerciseRecordsProvider = FutureProvider.autoDispose
+    .family<ExerciseRecords, (Exercise, int)>(
       (ref, key) => ref
           .watch(workoutSessionRepositoryProvider)
           .exerciseRecords(exercise: key.$1, excludingSessionId: key.$2),

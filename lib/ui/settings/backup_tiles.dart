@@ -4,6 +4,7 @@ import 'package:djym/data/database/app_database.dart';
 import 'package:djym/data/database/database_provider.dart';
 import 'package:djym/data/repositories/settings_repository.dart';
 import 'package:djym/data/services/backup_service.dart';
+import 'package:djym/domain/subscription_period.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,15 +12,10 @@ import 'package:share_plus/share_plus.dart';
 
 String describeLastBackup(DateTime? at, DateTime now) {
   if (at == null) return 'Never backed up';
-  final days = DateTime(
-    now.year,
-    now.month,
-    now.day,
-  ).difference(DateTime(at.year, at.month, at.day)).inDays;
-  return switch (days) {
+  return switch (daysBetween(at, now)) {
     0 => 'Last backup: today',
     1 => 'Last backup: yesterday',
-    _ => 'Last backup: $days days ago',
+    final days => 'Last backup: $days days ago',
   };
 }
 
@@ -54,6 +50,10 @@ class _BackupTilesState extends ConsumerState<BackupTiles> {
       if (result.status != ShareResultStatus.dismissed) {
         await ref.read(settingsRepositoryProvider).markBackedUp(DateTime.now());
       }
+    } on Exception {
+      if (mounted) {
+        await _explain('Export failed', 'The backup could not be created.');
+      }
     } finally {
       if (mounted) setState(() => _running = null);
     }
@@ -87,6 +87,14 @@ class _BackupTilesState extends ConsumerState<BackupTiles> {
       final database = ref.read(appDatabaseProvider);
       await service.export(database, destination: service.safetyDirectory);
       await service.restore(database, backup);
+    } on Exception {
+      if (mounted) {
+        await _explain(
+          'Import failed',
+          'The backup could not be read. Your data was not changed.',
+        );
+      }
+      return;
     } finally {
       if (mounted) setState(() => _running = null);
     }

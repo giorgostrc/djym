@@ -150,7 +150,7 @@ final exerciseHistoryRepositoryProvider = Provider<ExerciseHistoryRepository>(
 );
 
 final StreamProviderFamily<ExerciseHistory, int> exerciseHistoryProvider =
-    StreamProvider.family<ExerciseHistory, int>(
+    StreamProvider.autoDispose.family<ExerciseHistory, int>(
       (ref, exerciseId) =>
           ref.watch(exerciseHistoryRepositoryProvider).watchHistory(exerciseId),
     );

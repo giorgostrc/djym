@@ -19,6 +19,11 @@ class RestAlerts {
         AndroidFlutterLocalNotificationsPlugin
       >();
 
+  IOSFlutterLocalNotificationsPlugin? get _ios => _plugin
+      .resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin
+      >();
+
   /// [onOpen] receives the workout of a tapped notification, including the
   /// one that launched the app.
   Future<void> initialize(void Function(int sessionId) onOpen) async {
@@ -30,6 +35,12 @@ class RestAlerts {
     await _plugin.initialize(
       settings: const InitializationSettings(
         android: AndroidInitializationSettings(_icon),
+        // Permission is asked the first time a rest starts, not at launch.
+        iOS: DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
       ),
       onDidReceiveNotificationResponse: (response) => open(response.payload),
     );
@@ -41,38 +52,23 @@ class RestAlerts {
   }
 
   Future<bool> enabled() async =>
-      await _android?.areNotificationsEnabled() ?? false;
+      await _android?.areNotificationsEnabled() ??
+      (await _ios?.checkPermissions())?.isEnabled ??
+      false;
 
   Future<bool> requestPermission() async =>
-      await _android?.requestNotificationsPermission() ?? false;
+      await _android?.requestNotificationsPermission() ??
+      await _ios?.requestPermissions(alert: true, sound: true) ??
+      false;
 
+  /// iOS has no live countdown notification, only the rest-over alert.
   Future<void> schedule(Rest rest, {required int sessionId}) async {
     await cancel();
-    final android = _android;
-    if (android == null || !await enabled()) return;
+    if (!await enabled()) return;
 
-    final exact = await android.canScheduleExactNotifications() ?? false;
-    await _plugin.show(
-      id: _countdownId,
-      title: 'Resting',
-      body: 'Tap to return to your workout',
-      payload: '$sessionId',
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          'rest_countdown',
-          'Rest countdown',
-          channelDescription: 'Time left while resting between sets',
-          color: BrandColors.deepTeal,
-          importance: Importance.low,
-          priority: Priority.low,
-          silent: true,
-          when: rest.endsAt.millisecondsSinceEpoch,
-          usesChronometer: true,
-          chronometerCountDown: true,
-          timeoutAfter: rest.remainingAt(DateTime.now()).inMilliseconds,
-        ),
-      ),
-    );
+    final android = _android;
+    if (android != null) await _showCountdown(rest, sessionId: sessionId);
+    final exact = await android?.canScheduleExactNotifications() ?? false;
     await _plugin.zonedSchedule(
       id: _restOverId,
       title: 'Rest is over',
@@ -95,6 +91,29 @@ class RestAlerts {
       ),
     );
   }
+
+  Future<void> _showCountdown(Rest rest, {required int sessionId}) =>
+      _plugin.show(
+        id: _countdownId,
+        title: 'Resting',
+        body: 'Tap to return to your workout',
+        payload: '$sessionId',
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            'rest_countdown',
+            'Rest countdown',
+            channelDescription: 'Time left while resting between sets',
+            color: BrandColors.deepTeal,
+            importance: Importance.low,
+            priority: Priority.low,
+            silent: true,
+            when: rest.endsAt.millisecondsSinceEpoch,
+            usesChronometer: true,
+            chronometerCountDown: true,
+            timeoutAfter: rest.remainingAt(DateTime.now()).inMilliseconds,
+          ),
+        ),
+      );
 
   Future<void> cancel() => _plugin.cancelAll();
 }

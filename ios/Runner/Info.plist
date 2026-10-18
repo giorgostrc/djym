@@ -22,6 +22,10 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>djym uses the camera to take a photo of an exercise.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>djym lets you pick an exercise photo from your library.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

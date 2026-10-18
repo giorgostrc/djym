@@ -6,10 +6,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 const _storageKey = 'ai_settings';
 
-/// Kept in the Android Keystore rather than the database, so API keys
-/// never end up in backups.
+/// Kept in the Android Keystore or iOS Keychain rather than the database, so
+/// API keys never end up in backups or move to another device.
 class AiSettingsNotifier extends AsyncNotifier<AiSettings?> {
-  final _storage = const FlutterSecureStorage();
+  final _storage = const FlutterSecureStorage(
+    iOptions: IOSOptions(
+      accessibility: KeychainAccessibility.unlocked_this_device,
+    ),
+  );
 
   @override
   Future<AiSettings?> build() async {

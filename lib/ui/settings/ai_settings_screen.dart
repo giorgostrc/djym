@@ -72,12 +72,14 @@ class _AiSettingsFormState extends ConsumerState<_AiSettingsForm> {
     try {
       await AiClient(ref.read(aiHttpClientProvider), settings).verify();
     } on AiException catch (error) {
+      if (!mounted) return;
       setState(() {
         _checking = false;
         _error = error.message;
       });
       return;
     }
+    if (!mounted) return;
 
     await ref.read(aiSettingsProvider.notifier).save(settings);
     if (!mounted) return;

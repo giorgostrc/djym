@@ -82,8 +82,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       context: context,
       builder: (_) => SessionSummarySheet(summary: summary, units: units),
     );
+    if (!mounted) return;
     ref.read(selectedDayProvider.notifier).selectToday();
-    if (mounted) context.go(Routes.calendar);
+    context.go(Routes.calendar);
   }
 
   Future<void> _remove({

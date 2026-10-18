@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/misc.dart';
 import 'package:http/http.dart' as http;
 
 const _englishLanguageId = 2;
+const _timeout = Duration(seconds: 15);
 
 /// wger muscle ids mapped to the local muscle names; Serratus anterior (3)
 /// has no local counterpart.
@@ -82,7 +83,7 @@ class WgerClient {
       'name__search': term,
       'limit': '30',
     });
-    final response = await _http.get(uri);
+    final response = await _http.get(uri).timeout(_timeout);
     if (response.statusCode != 200) {
       throw http.ClientException('wger returned ${response.statusCode}', uri);
     }
@@ -90,12 +91,20 @@ class WgerClient {
     final body = jsonDecode(utf8.decode(response.bodyBytes)) as Map;
     return [
       for (final json in body['results'] as List)
-        WgerExercise.fromJson(json as Map<String, dynamic>),
+        if (_hasEnglishName(json as Map<String, dynamic>))
+          WgerExercise.fromJson(json),
     ];
   }
 
-  Future<Uint8List> download(String url) => _http.readBytes(Uri.parse(url));
+  Future<Uint8List> download(String url) =>
+      _http.readBytes(Uri.parse(url)).timeout(_timeout);
 }
+
+/// Some wger entries are only translated into other languages.
+bool _hasEnglishName(Map<String, dynamic> json) =>
+    (json['translations'] as List).cast<Map<String, dynamic>>().any(
+      (translation) => translation['language'] == _englishLanguageId,
+    );
 
 String? _plainText(String html) {
   final text = html

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:djym/data/database/app_database.dart';
 import 'package:djym/data/repositories/exercise_repository.dart';
@@ -13,6 +12,7 @@ import 'package:djym/ui/exercises/remove_exercise.dart';
 import 'package:djym/ui/exercises/tracking_type_display.dart';
 import 'package:djym/ui/exercises/wger_suggestions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -227,17 +227,26 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
       case _PhotoChoice.remove:
         _thumbnail = Future.value();
       case _PhotoChoice.gallery || _PhotoChoice.camera:
-        final picked = await ref
-            .read(imagePickerProvider)
-            .pickImage(
-              source: choice == _PhotoChoice.camera
-                  ? ImageSource.camera
-                  : ImageSource.gallery,
-              maxWidth: 256,
-              maxHeight: 256,
-              imageQuality: 80,
-            );
-        if (picked == null) return;
+        final XFile? picked;
+        try {
+          picked = await ref
+              .read(imagePickerProvider)
+              .pickImage(
+                source: choice == _PhotoChoice.camera
+                    ? ImageSource.camera
+                    : ImageSource.gallery,
+                maxWidth: 256,
+                maxHeight: 256,
+                imageQuality: 80,
+              );
+        } on PlatformException {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not open the photo picker')),
+          );
+          return;
+        }
+        if (picked == null || !mounted) return;
         _thumbnail = picked.readAsBytes();
     }
     _markDirty();
