@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/database/database_provider.dart';
+import 'package:loggym/data/repositories/subscription_repository.dart';
 import 'package:loggym/domain/tracking_type.dart';
 
 class SessionExercise {
@@ -36,12 +37,14 @@ class ExerciseRecords {
 
 class SessionSummary {
   const SessionSummary({
+    required this.session,
     required this.duration,
     required this.exerciseCount,
     required this.setCount,
     required this.volumeKg,
   });
 
+  final WorkoutSession session;
   final Duration duration;
   final int exerciseCount;
   final int setCount;
@@ -133,17 +136,20 @@ class WorkoutSessionRepository {
   Future<int> logPastSession(DateTime day, {int? planId}) =>
       _database.transaction(() async {
         final startedAt = DateTime(day.year, day.month, day.day, 18);
-        final id = await _database
+        final session = await _database
             .into(_sessions)
-            .insert(
+            .insertReturning(
               WorkoutSessionsCompanion.insert(
                 startedAt: startedAt,
                 finishedAt: Value(startedAt.add(const Duration(hours: 1))),
                 planId: Value(planId),
               ),
             );
-        if (planId != null) await _addPlanSets(id, planId);
-        return id;
+        await SubscriptionRepository(
+          _database,
+        ).linkToLikelySubscription(session);
+        if (planId != null) await _addPlanSets(session.id, planId);
+        return session.id;
       });
 
   Future<void> updateSessionTimes(
@@ -351,15 +357,19 @@ class WorkoutSessionRepository {
         ]);
 
         final finishedAt = DateTime.now();
-        final session =
+        final [session] =
             await (_database.update(
               _sessions,
             )..where((s) => s.id.equals(sessionId))).writeReturning(
               WorkoutSessionsCompanion(finishedAt: Value(finishedAt)),
             );
+        await SubscriptionRepository(
+          _database,
+        ).linkToLikelySubscription(session);
 
         return SessionSummary(
-          duration: finishedAt.difference(session.single.startedAt),
+          session: session,
+          duration: finishedAt.difference(session.startedAt),
           exerciseCount: {for (final set in logged) set.exerciseId}.length,
           setCount: logged.length,
           volumeKg: logged.fold(

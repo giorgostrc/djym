@@ -11,6 +11,8 @@ import 'package:loggym/ui/plans/plan_editor_screen.dart';
 import 'package:loggym/ui/plans/plans_screen.dart';
 import 'package:loggym/ui/session/session_screen.dart';
 import 'package:loggym/ui/settings/settings_screen.dart';
+import 'package:loggym/ui/subscriptions/subscription_form_screen.dart';
+import 'package:loggym/ui/subscriptions/subscriptions_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
@@ -26,6 +28,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: Routes.calendar,
                 builder: (context, state) => const CalendarScreen(),
                 routes: [
+                  GoRoute(
+                    path: 'subscriptions',
+                    builder: (context, state) => const SubscriptionsScreen(),
+                  ),
                   GoRoute(
                     path: 'sessions/:id',
                     builder: (context, state) => SessionDetailScreen(
@@ -91,6 +97,26 @@ final routerProvider = Provider<GoRouter>((ref) {
           fullscreenDialog: true,
           child: PlanEditorScreen(
             planId: int.parse(state.pathParameters['id']!),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: Routes.newSubscription,
+        pageBuilder: (context, state) => MaterialPage(
+          fullscreenDialog: true,
+          child: SubscriptionFormScreen(
+            renewFromId: int.tryParse(
+              state.uri.queryParameters['renew'] ?? '',
+            ),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: Routes.editSubscription,
+        pageBuilder: (context, state) => MaterialPage(
+          fullscreenDialog: true,
+          child: SubscriptionFormScreen(
+            subscriptionId: int.parse(state.pathParameters['id']!),
           ),
         ),
       ),

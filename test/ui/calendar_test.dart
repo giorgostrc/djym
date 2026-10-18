@@ -33,6 +33,8 @@ void main() {
   tearDown(() => database.close());
 
   Future<void> pumpApp(WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1600));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -209,4 +211,35 @@ void main() {
     },
     skip: DateTime.now().day == 1,
   );
+
+  testWidgets('the year view sums the year and opens a tapped month', (
+    tester,
+  ) async {
+    final year = DateTime.now().year;
+    await sessions.logPastSession(DateTime(year, 1, 5));
+    await sessions.logPastSession(DateTime(year, 1, 6));
+    await pumpApp(tester);
+
+    await tester.tap(find.text('Year'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('$year'), findsOneWidget);
+    expect(find.text('workouts'), findsOneWidget);
+    expect(find.text('2 h'), findsOneWidget);
+    expect(find.text('Start workout'), findsNothing);
+
+    await tester.tap(find.byTooltip('Previous year'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('No workouts in ${year - 1}'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Next year'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Jan'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('January $year'), findsOneWidget);
+
+    await unmountApp(tester);
+  });
 }

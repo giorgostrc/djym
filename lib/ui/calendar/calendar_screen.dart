@@ -7,7 +7,9 @@ import 'package:loggym/data/repositories/workout_session_repository.dart';
 import 'package:loggym/domain/unit_system.dart';
 import 'package:loggym/routing/routes.dart';
 import 'package:loggym/ui/calendar/selected_day_provider.dart';
+import 'package:loggym/ui/calendar/year_view.dart';
 import 'package:loggym/ui/session/start_workout.dart';
+import 'package:loggym/ui/subscriptions/subscription_card.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -19,6 +21,8 @@ class CalendarScreen extends ConsumerStatefulWidget {
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   late DateTime _focusedDay = ref.read(selectedDayProvider);
+  var _showingYear = false;
+  late int _year = _focusedDay.year;
 
   DateTime get _focusedMonth => DateTime(_focusedDay.year, _focusedDay.month);
 
@@ -69,6 +73,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('LogGym')),
       floatingActionButton: switch (selectedDay.compareTo(today)) {
+        _ when _showingYear => null,
         < 0 => FloatingActionButton.extended(
           heroTag: null,
           onPressed: () => _logPastWorkout(selectedDay),
@@ -88,44 +93,78 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         children: [
           if (firstName != null && firstName.isNotEmpty)
             _Greeting(firstName: firstName),
-          TableCalendar<SessionOverview>(
-            firstDay: DateTime(2000),
-            lastDay: DateTime(2100),
-            focusedDay: _focusedDay,
-            startingDayOfWeek: StartingDayOfWeek.monday,
-            availableCalendarFormats: const {CalendarFormat.month: 'Month'},
-            calendarStyle: const CalendarStyle(markersMaxCount: 3),
-            selectedDayPredicate: (day) => isSameDay(day, selectedDay),
-            eventLoader: (day) => [
-              for (final overview in sessions)
-                if (isSameDay(overview.session.startedAt, day)) overview,
-            ],
-            onDaySelected: (day, focusedDay) {
-              ref.read(selectedDayProvider.notifier).select(day);
-              setState(() => _focusedDay = focusedDay);
-            },
-            onPageChanged: (focusedDay) =>
-                setState(() => _focusedDay = focusedDay),
-          ),
-          const Divider(),
-          _DayHeader(day: selectedDay),
-          if (daySessions.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'No workouts',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: SegmentedButton<bool>(
+              segments: const [
+                ButtonSegment(
+                  value: false,
+                  icon: Icon(Icons.calendar_view_month),
+                  label: Text('Month'),
                 ),
-              ),
+                ButtonSegment(
+                  value: true,
+                  icon: Icon(Icons.insights),
+                  label: Text('Year'),
+                ),
+              ],
+              selected: {_showingYear},
+              onSelectionChanged: (selection) => setState(() {
+                _showingYear = selection.single;
+                _year = _focusedDay.year;
+              }),
+            ),
+          ),
+          if (_showingYear)
+            YearView(
+              year: _year,
+              onYearChanged: (year) => setState(() => _year = year),
+              onMonthSelected: (month) => setState(() {
+                _focusedDay = month;
+                _showingYear = false;
+              }),
             )
-          else
-            for (final overview in daySessions)
-              _SessionTile(
-                overview: overview,
-                onTap: () =>
-                    context.push(Routes.sessionDetail(overview.session.id)),
-              ),
+          else ...[
+            TableCalendar<SessionOverview>(
+              firstDay: DateTime(2000),
+              lastDay: DateTime(2100),
+              focusedDay: _focusedDay,
+              startingDayOfWeek: StartingDayOfWeek.monday,
+              availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+              calendarStyle: const CalendarStyle(markersMaxCount: 3),
+              selectedDayPredicate: (day) => isSameDay(day, selectedDay),
+              eventLoader: (day) => [
+                for (final overview in sessions)
+                  if (isSameDay(overview.session.startedAt, day)) overview,
+              ],
+              onDaySelected: (day, focusedDay) {
+                ref.read(selectedDayProvider.notifier).select(day);
+                setState(() => _focusedDay = focusedDay);
+              },
+              onPageChanged: (focusedDay) =>
+                  setState(() => _focusedDay = focusedDay),
+            ),
+            const Divider(),
+            _DayHeader(day: selectedDay),
+            if (daySessions.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'No workouts',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              )
+            else
+              for (final overview in daySessions)
+                _SessionTile(
+                  overview: overview,
+                  onTap: () =>
+                      context.push(Routes.sessionDetail(overview.session.id)),
+                ),
+            const SubscriptionSection(),
+          ],
         ],
       ),
     );

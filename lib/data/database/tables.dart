@@ -82,6 +82,13 @@ class WorkoutSessions extends Table {
     #id,
     onDelete: KeyAction.setNull,
   )();
+
+  /// The subscription this workout counts towards, if any.
+  IntColumn get subscriptionId => integer().nullable().references(
+    GymSubscriptions,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
   DateTimeColumn get startedAt => dateTime()();
   DateTimeColumn get finishedAt => dateTime().nullable()();
   TextColumn get notes => text().nullable()();

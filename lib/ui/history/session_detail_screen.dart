@@ -8,6 +8,7 @@ import 'package:loggym/routing/routes.dart';
 import 'package:loggym/ui/exercises/exercise_avatar.dart';
 import 'package:loggym/ui/session/logged_set_tile.dart';
 import 'package:loggym/ui/session/set_description.dart';
+import 'package:loggym/ui/subscriptions/subscription_choice.dart';
 
 /// Read-only look at a finished workout, with Edit and Delete.
 class SessionDetailScreen extends ConsumerWidget {
@@ -82,6 +83,10 @@ class SessionDetailScreen extends ConsumerWidget {
               '${formatDuration(duration)}',
               style: theme.textTheme.titleMedium,
             ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+            child: SubscriptionChoice(sessionId: sessionId),
           ),
           if (notes.isNotEmpty)
             Padding(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:loggym/data/repositories/workout_session_repository.dart';
 import 'package:loggym/domain/unit_system.dart';
+import 'package:loggym/ui/subscriptions/subscription_choice.dart';
 
 class SessionSummarySheet extends StatelessWidget {
   const SessionSummarySheet({
@@ -49,6 +50,10 @@ class SessionSummarySheet extends StatelessWidget {
                     ],
                   ),
               ],
+            ),
+            SubscriptionChoice(
+              sessionId: summary.session.id,
+              minimumOptions: 2,
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context),

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:loggym/data/database/app_database.steps.dart';
 import 'package:loggym/data/database/tables.dart';
+import 'package:loggym/domain/subscription_period.dart';
 import 'package:loggym/domain/theme_preference.dart';
 import 'package:loggym/domain/tracking_type.dart';
 import 'package:loggym/domain/unit_system.dart';
@@ -47,7 +48,7 @@ class AppDatabase extends _$AppDatabase {
   /// moves them into [ExerciseThumbnails].
   final Future<Directory> Function()? legacyFilesDirectory;
 
-  static const currentSchemaVersion = 6;
+  static const currentSchemaVersion = 7;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -89,6 +90,13 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(schema.settings, schema.settings.restSeconds);
         await m.addColumn(schema.settings, schema.settings.restAlertsPrompted);
       },
+      from6To7: (m, schema) async {
+        await m.addColumn(
+          schema.workoutSessions,
+          schema.workoutSessions.subscriptionId,
+        );
+        await _linkSessionsToTheirOnlySubscription();
+      },
     ),
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
@@ -115,6 +123,37 @@ class AppDatabase extends _$AppDatabase {
         variables: [
           Variable.withInt(row.read<int>('id')),
           Variable.withBlob(await file.readAsBytes()),
+        ],
+      );
+    }
+  }
+
+  /// Before schema v7 every workout counted for every subscription; a
+  /// workout covered by exactly one subscription now counts for that one.
+  Future<void> _linkSessionsToTheirOnlySubscription() async {
+    final subscriptions = await customSelect(
+      'SELECT id, start_date, end_date FROM gym_subscriptions',
+    ).get();
+    final sessions = await customSelect(
+      'SELECT id, started_at FROM workout_sessions '
+      'WHERE finished_at IS NOT NULL',
+    ).get();
+    for (final session in sessions) {
+      final startedAt = session.read<DateTime>('started_at');
+      final covering = [
+        for (final subscription in subscriptions)
+          if (SubscriptionPeriod(
+            subscription.read<DateTime>('start_date'),
+            subscription.read<DateTime>('end_date'),
+          ).contains(startedAt))
+            subscription.read<int>('id'),
+      ];
+      if (covering.length != 1) continue;
+      await customUpdate(
+        'UPDATE workout_sessions SET subscription_id = ? WHERE id = ?',
+        variables: [
+          Variable.withInt(covering.single),
+          Variable.withInt(session.read<int>('id')),
         ],
       );
     }

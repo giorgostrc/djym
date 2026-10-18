@@ -10,6 +10,8 @@ import 'generated/schema_v1.dart' as v1;
 import 'generated/schema_v2.dart' as v2;
 import 'generated/schema_v3.dart' as v3;
 import 'generated/schema_v4.dart' as v4;
+import 'generated/schema_v6.dart' as v6;
+import 'generated/schema_v7.dart' as v7;
 
 void main() {
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -143,6 +145,68 @@ void main() {
       );
 
       expect(Directory('${support.path}/thumbnails').existsSync(), isFalse);
+    },
+  );
+
+  test(
+    'v6 to v7 links each workout to the only subscription covering it',
+    () async {
+      v6.WorkoutSessionsData session(
+        int id,
+        String day, {
+        bool finished = true,
+      }) => v6.WorkoutSessionsData(
+        id: id,
+        startedAt: '${day}T18:00:00.000',
+        finishedAt: finished ? '${day}T19:00:00.000' : null,
+      );
+
+      await verifier.testWithDataIntegrity(
+        oldVersion: 6,
+        newVersion: 7,
+        createOld: v6.DatabaseAtV6.new,
+        createNew: v7.DatabaseAtV7.new,
+        openTestedDatabase: AppDatabase.new,
+        createItems: (batch, oldDb) {
+          batch
+            ..insertAll(oldDb.gymSubscriptions, const [
+              v6.GymSubscriptionsData(
+                id: 1,
+                title: 'Gym',
+                costCents: 6000,
+                startDate: '2026-10-01T00:00:00.000',
+                endDate: '2026-10-31T00:00:00.000',
+              ),
+              v6.GymSubscriptionsData(
+                id: 2,
+                title: 'Yoga',
+                costCents: 4000,
+                startDate: '2026-10-15T00:00:00.000',
+                endDate: '2026-11-14T00:00:00.000',
+              ),
+            ])
+            ..insertAll(oldDb.workoutSessions, [
+              session(1, '2026-10-05'),
+              session(2, '2026-10-20'),
+              session(3, '2026-11-10'),
+              session(4, '2026-10-06', finished: false),
+              session(5, '2026-12-01'),
+            ]);
+        },
+        validateItems: (newDb) async {
+          final sessions = await newDb.select(newDb.workoutSessions).get();
+          expect(
+            {for (final s in sessions) s.id: s.subscriptionId},
+            {
+              1: 1,
+              2: null,
+              3: 2,
+              4: null,
+              5: null,
+            },
+          );
+        },
+      );
     },
   );
 }
