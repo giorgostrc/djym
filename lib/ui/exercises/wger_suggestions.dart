@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
 import 'package:loggym/data/services/wger_client.dart';
 
-const _minimumTermLength = 3;
+const minimumSuggestionTermLength = 3;
 
 /// Fits four and a half rows, so a cut-off row hints that the list scrolls.
 const _panelMaxHeight = 324.0;
@@ -20,7 +20,9 @@ class WgerSuggestions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (term.length < _minimumTermLength) return const SizedBox.shrink();
+    if (term.length < minimumSuggestionTermLength) {
+      return const SizedBox.shrink();
+    }
 
     final textTheme = Theme.of(context).textTheme;
     final quiet = TextStyle(color: Theme.of(context).colorScheme.outline);
@@ -102,14 +104,19 @@ class _SuggestionTile extends StatelessWidget {
   }
 }
 
-class WgerPrefillCard extends StatelessWidget {
-  const WgerPrefillCard({
-    required this.source,
+/// Shows where the form's values came from, with a way to undo it.
+class PrefillCard extends StatelessWidget {
+  const PrefillCard({
+    required this.leading,
+    required this.title,
+    required this.subtitle,
     required this.onClear,
     super.key,
   });
 
-  final WgerExercise source;
+  final Widget leading;
+  final String title;
+  final String subtitle;
   final VoidCallback onClear;
 
   @override
@@ -117,9 +124,9 @@ class WgerPrefillCard extends StatelessWidget {
     return Card.filled(
       margin: const EdgeInsets.only(top: 8),
       child: ListTile(
-        leading: WgerThumbnail(source.thumbnailUrl),
-        title: const Text('Prefilled from wger'),
-        subtitle: Text(source.name),
+        leading: leading,
+        title: Text(title),
+        subtitle: Text(subtitle),
         trailing: TextButton(onPressed: onClear, child: const Text('Clear')),
       ),
     );

@@ -11,6 +11,7 @@ import 'package:loggym/ui/history/session_detail_screen.dart';
 import 'package:loggym/ui/plans/plan_editor_screen.dart';
 import 'package:loggym/ui/plans/plans_screen.dart';
 import 'package:loggym/ui/session/session_screen.dart';
+import 'package:loggym/ui/settings/ai_settings_screen.dart';
 import 'package:loggym/ui/settings/settings_screen.dart';
 import 'package:loggym/ui/subscriptions/subscription_form_screen.dart';
 import 'package:loggym/ui/subscriptions/subscriptions_screen.dart';
@@ -102,6 +103,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => SessionScreen(
           sessionId: int.parse(state.pathParameters['id']!),
           pickExercisesOnOpen: state.uri.queryParameters['pick'] == 'true',
+        ),
+      ),
+      GoRoute(
+        path: Routes.aiSettings,
+        pageBuilder: (context, state) => const MaterialPage(
+          fullscreenDialog: true,
+          child: AiSettingsScreen(),
         ),
       ),
       GoRoute(

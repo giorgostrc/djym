@@ -7,8 +7,11 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
+import 'package:loggym/data/services/ai_client.dart';
+import 'package:loggym/data/services/exercise_autofill.dart';
 import 'package:loggym/data/services/wger_client.dart';
 import 'package:loggym/domain/tracking_type.dart';
+import 'package:loggym/ui/exercises/ai_fill_tile.dart';
 import 'package:loggym/ui/exercises/remove_exercise.dart';
 import 'package:loggym/ui/exercises/tracking_type_display.dart';
 import 'package:loggym/ui/exercises/wger_suggestions.dart';
@@ -66,8 +69,11 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
   late String _suggestionTerm = (widget.initialTitle ?? '').trim();
   Timer? _suggestionDebounce;
   WgerExercise? _prefill;
+  var _aiFilled = false;
+  var _aiFilling = false;
   late ({
     String title,
+    TrackingType trackingType,
     String guidance,
     List<int> muscleIds,
     Future<Uint8List?> thumbnail,
@@ -82,7 +88,8 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
     null => Future.value(),
   };
 
-  bool get _suggestsFromWger => widget.existing == null && _prefill == null;
+  bool get _suggestsFromWger =>
+      widget.existing == null && _prefill == null && !_aiFilled;
 
   @override
   void dispose() {
@@ -105,32 +112,74 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
     );
   }
 
-  void _applyPrefill(WgerExercise source) {
-    final idByName = {
-      for (final muscle in ref.read(musclesProvider).value ?? <Muscle>[])
-        muscle.name: muscle.id,
-    };
+  List<Muscle> get _muscles => ref.read(musclesProvider).value ?? [];
+
+  void _fillForm({
+    required String title,
+    required String guidance,
+    required List<String> muscleNames,
+    TrackingType? trackingType,
+  }) {
+    final idByName = {for (final muscle in _muscles) muscle.name: muscle.id};
     _beforePrefill = (
       title: _title.text,
+      trackingType: _trackingType,
       guidance: _formGuidance.text,
       muscleIds: [..._muscleIds],
       thumbnail: _thumbnail,
     );
-    _prefill = source;
-    _thumbnail = _downloadThumbnail(source);
-    _title.text = source.name;
-    _formGuidance.text = source.description ?? '';
+    _title.text = title;
+    _trackingType = trackingType ?? _trackingType;
+    _formGuidance.text = guidance;
     _muscleIds
       ..clear()
-      ..addAll([for (final name in source.muscleNames) idByName[name]!]);
+      ..addAll([for (final name in muscleNames) idByName[name]!]);
     FocusScope.of(context).unfocus();
     _markDirty();
+  }
+
+  void _applyPrefill(WgerExercise source) {
+    _fillForm(
+      title: source.name,
+      guidance: source.description ?? '',
+      muscleNames: source.muscleNames,
+    );
+    _prefill = source;
+    _thumbnail = _downloadThumbnail(source);
+  }
+
+  Future<void> _fillWithAi(AiClient client) async {
+    setState(() => _aiFilling = true);
+    try {
+      final draft = await draftExercise(
+        client,
+        title: _title.text.trim(),
+        muscleNames: [for (final muscle in _muscles) muscle.name],
+      );
+      if (!mounted) return;
+      _fillForm(
+        title: draft.title,
+        trackingType: draft.trackingType,
+        guidance: draft.formGuidance,
+        muscleNames: draft.muscleNames,
+      );
+      _aiFilled = true;
+    } on AiException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => _aiFilling = false);
+    }
   }
 
   void _clearPrefill() {
     final before = _beforePrefill;
     _prefill = null;
+    _aiFilled = false;
     _thumbnail = before.thumbnail;
+    _trackingType = before.trackingType;
     _title.text = before.title;
     _formGuidance.text = before.guidance;
     _muscleIds
@@ -264,6 +313,7 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
   @override
   Widget build(BuildContext context) {
     final muscles = ref.watch(musclesProvider).value ?? const [];
+    final aiClient = ref.watch(aiClientProvider);
     final textTheme = Theme.of(context).textTheme;
 
     return PopScope(
@@ -308,12 +358,32 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
                 onChanged: _onTitleChanged,
               ),
               if (_prefill case final prefill?)
-                WgerPrefillCard(source: prefill, onClear: _clearPrefill)
-              else if (_suggestsFromWger)
+                PrefillCard(
+                  leading: WgerThumbnail(prefill.thumbnailUrl),
+                  title: 'Prefilled from wger',
+                  subtitle: prefill.name,
+                  onClear: _clearPrefill,
+                )
+              else if (_aiFilled)
+                PrefillCard(
+                  leading: const Icon(Icons.auto_awesome),
+                  title: 'Filled with AI',
+                  subtitle: 'Check the details before saving',
+                  onClear: _clearPrefill,
+                )
+              else if (_suggestsFromWger) ...[
+                if (aiClient != null &&
+                    _title.text.trim().length >= minimumSuggestionTermLength)
+                  AiFillTile(
+                    title: _title.text.trim(),
+                    filling: _aiFilling,
+                    onTap: () => _fillWithAi(aiClient),
+                  ),
                 WgerSuggestions(
                   term: _suggestionTerm,
                   onSelected: _applyPrefill,
                 ),
+              ],
               const SizedBox(height: 24),
               Text('Tracking', style: textTheme.titleSmall),
               const SizedBox(height: 8),

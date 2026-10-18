@@ -3,6 +3,7 @@ abstract final class Routes {
   static const plans = '/plans';
   static const exercises = '/exercises';
   static const settings = '/settings';
+  static const aiSettings = '/settings/ai';
   static const workoutSession = '/session/:id';
   static const newExercise = '/exercises/new';
   static const editExercise = '/exercises/:id/edit';

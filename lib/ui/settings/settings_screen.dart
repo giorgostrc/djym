@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:loggym/data/repositories/settings_repository.dart';
+import 'package:loggym/data/services/ai_settings_store.dart';
 import 'package:loggym/domain/theme_preference.dart';
 import 'package:loggym/domain/unit_system.dart';
+import 'package:loggym/routing/routes.dart';
 import 'package:loggym/ui/settings/backup_tiles.dart';
 
 const _currencies = [
@@ -118,10 +121,33 @@ class SettingsScreen extends ConsumerWidget {
                     onChanged: (seconds) => repository.setRestSeconds(seconds!),
                   ),
                 ),
+                const _SectionHeader('AI assistant'),
+                const _AiTile(),
                 const _SectionHeader('Data'),
                 BackupTiles(lastBackupAt: settings.lastBackupAt),
               ],
             ),
+    );
+  }
+}
+
+class _AiTile extends ConsumerWidget {
+  const _AiTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(aiSettingsProvider).value;
+    return ListTile(
+      leading: const Icon(Icons.auto_awesome_outlined),
+      title: const Text('AI provider'),
+      subtitle: Text(
+        settings == null
+            ? 'Off · add your API key to turn on AI features'
+            : '${settings.provider.label} · ${settings.model} · '
+                  'key ending ${settings.keyHint}',
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => context.push(Routes.aiSettings),
     );
   }
 }

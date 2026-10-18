@@ -73,6 +73,7 @@ Commit `drift_schemas/`, `*.steps.dart` and `test/drift/`; only `*.g.dart` is ig
 - Money is stored as integer cents.
 - A single `settings` row is seeded on database creation, so the backup file also carries user preferences.
 - Exercise photos are stored as JPEG/PNG blobs in `exercise_thumbnails` (one row per exercise, user photos capped at 256 px), so a backup is the single database file.
+- AI features use the user's own API key (OpenAI, Anthropic or Gemini), stored with `flutter_secure_storage` in the Android Keystore, never in the database or backups. `AiClient` calls each provider's REST API directly and always requests JSON matching a schema; features stay hidden while no key is set.
 
 ## Brand
 
