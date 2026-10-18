@@ -1,12 +1,12 @@
+import 'package:djym/data/repositories/settings_repository.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/domain/theme_preference.dart';
+import 'package:djym/routing/router.dart';
+import 'package:djym/ui/core/app_theme.dart';
+import 'package:djym/ui/core/keep_screen_on.dart';
+import 'package:djym/ui/core/text_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/repositories/settings_repository.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/domain/theme_preference.dart';
-import 'package:loggym/routing/router.dart';
-import 'package:loggym/ui/core/app_theme.dart';
-import 'package:loggym/ui/core/keep_screen_on.dart';
-import 'package:loggym/ui/core/text_input.dart';
 
 class DjymApp extends ConsumerWidget {
   const DjymApp({super.key});

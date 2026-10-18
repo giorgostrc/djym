@@ -1,5 +1,11 @@
 import 'dart:convert';
 
+import 'package:djym/app.dart';
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/database/database_provider.dart';
+import 'package:djym/data/services/ai_client.dart';
+import 'package:djym/data/services/wger_client.dart';
+import 'package:djym/domain/ai_provider.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,12 +13,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:loggym/app.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/database/database_provider.dart';
-import 'package:loggym/data/services/ai_client.dart';
-import 'package:loggym/data/services/wger_client.dart';
-import 'package:loggym/domain/ai_provider.dart';
 
 void main() {
   late AppDatabase database;

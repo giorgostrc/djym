@@ -1,9 +1,9 @@
 import 'dart:io';
 
+import 'package:djym/data/services/wger_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:loggym/data/services/wger_client.dart';
 
 void main() {
   final fixture = File(

@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/repositories/exercise_repository.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/data/services/backup_service.dart';
+import 'package:djym/domain/tracking_type.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/data/services/backup_service.dart';
-import 'package:loggym/domain/tracking_type.dart';
 
 void main() {
   late Directory root;
@@ -16,8 +16,8 @@ void main() {
   late File databaseFile;
 
   setUp(() {
-    root = Directory.systemTemp.createTempSync('loggym_backup');
-    databaseFile = File('${root.path}/loggym.sqlite');
+    root = Directory.systemTemp.createTempSync('djym_backup');
+    databaseFile = File('${root.path}/djym.sqlite');
     service = BackupService(
       workDirectory: Directory('${root.path}/work')..createSync(),
       safetyDirectory: Directory('${root.path}/safety'),

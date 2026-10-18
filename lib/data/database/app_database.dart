@@ -1,8 +1,8 @@
+import 'package:djym/data/database/tables.dart';
+import 'package:djym/domain/theme_preference.dart';
+import 'package:djym/domain/tracking_type.dart';
+import 'package:djym/domain/unit_system.dart';
 import 'package:drift/drift.dart';
-import 'package:loggym/data/database/tables.dart';
-import 'package:loggym/domain/theme_preference.dart';
-import 'package:loggym/domain/tracking_type.dart';
-import 'package:loggym/domain/unit_system.dart';
 
 part 'app_database.g.dart';
 

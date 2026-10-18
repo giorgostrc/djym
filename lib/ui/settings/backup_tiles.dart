@@ -1,12 +1,12 @@
 import 'dart:io';
 
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/database/database_provider.dart';
+import 'package:djym/data/repositories/settings_repository.dart';
+import 'package:djym/data/services/backup_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/database/database_provider.dart';
-import 'package:loggym/data/repositories/settings_repository.dart';
-import 'package:loggym/data/services/backup_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 String describeLastBackup(DateTime? at, DateTime now) {

@@ -1,8 +1,8 @@
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/database/database_provider.dart';
+import 'package:djym/domain/subscription_period.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/database/database_provider.dart';
-import 'package:loggym/domain/subscription_period.dart';
 
 class SubscriptionOverview {
   SubscriptionOverview(this.subscription, this.sessionCount)

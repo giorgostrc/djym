@@ -1,7 +1,7 @@
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/database/database_provider.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/database/database_provider.dart';
 
 class PlanItem {
   const PlanItem(this.exercise, this.targetSets);

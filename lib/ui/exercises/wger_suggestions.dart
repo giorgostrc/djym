@@ -1,7 +1,7 @@
+import 'package:djym/data/repositories/exercise_repository.dart';
+import 'package:djym/data/services/wger_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/data/services/wger_client.dart';
 
 const minimumSuggestionTermLength = 3;
 

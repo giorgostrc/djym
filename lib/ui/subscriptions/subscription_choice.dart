@@ -1,7 +1,7 @@
+import 'package:djym/data/repositories/subscription_repository.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/repositories/subscription_repository.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
 
 /// Picks which running subscription a workout counts towards. Hidden while
 /// fewer than [minimumOptions] subscriptions ran on its day.

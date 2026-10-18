@@ -1,8 +1,8 @@
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/repositories/exercise_repository.dart';
+import 'package:djym/ui/exercises/tracking_type_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/ui/exercises/tracking_type_display.dart';
 
 class ExerciseAvatar extends ConsumerWidget {
   const ExerciseAvatar(this.exercise, {super.key});

@@ -1,20 +1,20 @@
+import 'package:djym/routing/routes.dart';
+import 'package:djym/ui/calendar/calendar_screen.dart';
+import 'package:djym/ui/core/app_shell.dart';
+import 'package:djym/ui/exercises/exercise_detail_screen.dart';
+import 'package:djym/ui/exercises/exercise_form_screen.dart';
+import 'package:djym/ui/exercises/exercises_screen.dart';
+import 'package:djym/ui/history/session_detail_screen.dart';
+import 'package:djym/ui/plans/plan_editor_screen.dart';
+import 'package:djym/ui/plans/plans_screen.dart';
+import 'package:djym/ui/session/session_screen.dart';
+import 'package:djym/ui/settings/ai_settings_screen.dart';
+import 'package:djym/ui/settings/settings_screen.dart';
+import 'package:djym/ui/subscriptions/subscription_form_screen.dart';
+import 'package:djym/ui/subscriptions/subscriptions_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/routing/routes.dart';
-import 'package:loggym/ui/calendar/calendar_screen.dart';
-import 'package:loggym/ui/core/app_shell.dart';
-import 'package:loggym/ui/exercises/exercise_detail_screen.dart';
-import 'package:loggym/ui/exercises/exercise_form_screen.dart';
-import 'package:loggym/ui/exercises/exercises_screen.dart';
-import 'package:loggym/ui/history/session_detail_screen.dart';
-import 'package:loggym/ui/plans/plan_editor_screen.dart';
-import 'package:loggym/ui/plans/plans_screen.dart';
-import 'package:loggym/ui/session/session_screen.dart';
-import 'package:loggym/ui/settings/ai_settings_screen.dart';
-import 'package:loggym/ui/settings/settings_screen.dart';
-import 'package:loggym/ui/subscriptions/subscription_form_screen.dart';
-import 'package:loggym/ui/subscriptions/subscriptions_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(

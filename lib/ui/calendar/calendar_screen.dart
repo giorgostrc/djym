@@ -1,16 +1,16 @@
+import 'package:djym/data/repositories/plan_repository.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/routing/routes.dart';
+import 'package:djym/ui/calendar/selected_day_provider.dart';
+import 'package:djym/ui/calendar/year_view.dart';
+import 'package:djym/ui/core/brand_colors.dart';
+import 'package:djym/ui/core/wordmark.dart';
+import 'package:djym/ui/session/start_workout.dart';
+import 'package:djym/ui/subscriptions/subscription_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/data/repositories/plan_repository.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/routing/routes.dart';
-import 'package:loggym/ui/calendar/selected_day_provider.dart';
-import 'package:loggym/ui/calendar/year_view.dart';
-import 'package:loggym/ui/core/brand_colors.dart';
-import 'package:loggym/ui/core/wordmark.dart';
-import 'package:loggym/ui/session/start_workout.dart';
-import 'package:loggym/ui/subscriptions/subscription_card.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarScreen extends ConsumerStatefulWidget {

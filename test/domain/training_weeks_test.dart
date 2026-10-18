@@ -1,5 +1,5 @@
+import 'package:djym/domain/training_weeks.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loggym/domain/training_weeks.dart';
 
 void main() {
   test('weeks start on Monday', () {

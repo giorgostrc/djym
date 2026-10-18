@@ -1,5 +1,5 @@
+import 'package:djym/domain/unit_system.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loggym/domain/unit_system.dart';
 
 void main() {
   test('converts weights between kilograms and pounds', () {

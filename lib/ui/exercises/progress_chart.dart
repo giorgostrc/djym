@@ -1,10 +1,10 @@
 import 'dart:math';
 
+import 'package:djym/data/repositories/exercise_history_repository.dart';
+import 'package:djym/domain/unit_system.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:loggym/data/repositories/exercise_history_repository.dart';
-import 'package:loggym/domain/unit_system.dart';
 
 const _chartHeight = 200.0;
 

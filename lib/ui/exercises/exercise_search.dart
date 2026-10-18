@@ -1,4 +1,4 @@
-import 'package:loggym/data/repositories/exercise_repository.dart';
+import 'package:djym/data/repositories/exercise_repository.dart';
 
 extension ExerciseSearch on List<ExerciseWithMuscles> {
   List<ExerciseWithMuscles> matching(String query, {int? muscleId}) {

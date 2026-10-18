@@ -1,9 +1,9 @@
+import 'package:djym/data/services/ai_client.dart';
+import 'package:djym/data/services/ai_settings_store.dart';
+import 'package:djym/domain/ai_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/data/services/ai_client.dart';
-import 'package:loggym/data/services/ai_settings_store.dart';
-import 'package:loggym/domain/ai_provider.dart';
 
 class AiSettingsScreen extends ConsumerWidget {
   const AiSettingsScreen({super.key});

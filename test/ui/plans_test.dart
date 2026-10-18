@@ -1,16 +1,16 @@
+import 'package:djym/app.dart';
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/database/database_provider.dart';
+import 'package:djym/data/repositories/exercise_repository.dart';
+import 'package:djym/data/repositories/plan_repository.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/domain/tracking_type.dart';
+import 'package:djym/ui/core/clock_provider.dart';
+import 'package:djym/ui/core/keep_screen_on.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loggym/app.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/database/database_provider.dart';
-import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/data/repositories/plan_repository.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/domain/tracking_type.dart';
-import 'package:loggym/ui/core/clock_provider.dart';
-import 'package:loggym/ui/core/keep_screen_on.dart';
 
 void main() {
   late AppDatabase database;

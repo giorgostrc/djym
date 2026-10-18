@@ -1,14 +1,14 @@
+import 'package:djym/data/repositories/settings_repository.dart';
+import 'package:djym/data/repositories/stats_repository.dart';
+import 'package:djym/domain/money.dart';
+import 'package:djym/domain/subscription_period.dart';
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/ui/core/brand_colors.dart';
+import 'package:djym/ui/core/stat_tile.dart';
+import 'package:djym/ui/exercises/exercise_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:loggym/data/repositories/settings_repository.dart';
-import 'package:loggym/data/repositories/stats_repository.dart';
-import 'package:loggym/domain/money.dart';
-import 'package:loggym/domain/subscription_period.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/ui/core/brand_colors.dart';
-import 'package:loggym/ui/core/stat_tile.dart';
-import 'package:loggym/ui/exercises/exercise_avatar.dart';
 
 /// A year at a glance: headline numbers, a heatmap of training days per
 /// month, and the exercises done most often.

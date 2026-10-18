@@ -1,11 +1,11 @@
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/ui/exercises/exercise_avatar.dart';
+import 'package:djym/ui/session/last_performance_sheet.dart';
+import 'package:djym/ui/session/set_description.dart';
+import 'package:djym/ui/session/set_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/ui/exercises/exercise_avatar.dart';
-import 'package:loggym/ui/session/last_performance_sheet.dart';
-import 'package:loggym/ui/session/set_description.dart';
-import 'package:loggym/ui/session/set_row.dart';
 
 class ExerciseCard extends ConsumerWidget {
   const ExerciseCard({

@@ -1,12 +1,12 @@
 import 'dart:convert';
 
+import 'package:djym/data/services/ai_client.dart';
+import 'package:djym/data/services/exercise_autofill.dart';
+import 'package:djym/domain/ai_provider.dart';
+import 'package:djym/domain/tracking_type.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:loggym/data/services/ai_client.dart';
-import 'package:loggym/data/services/exercise_autofill.dart';
-import 'package:loggym/domain/ai_provider.dart';
-import 'package:loggym/domain/tracking_type.dart';
 
 void main() {
   AiClient answering(Map<String, dynamic> draft) => AiClient(

@@ -1,6 +1,6 @@
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/domain/tracking_type.dart';
-import 'package:loggym/domain/unit_system.dart';
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/domain/tracking_type.dart';
+import 'package:djym/domain/unit_system.dart';
 
 /// A one-line summary such as `60 kg × 8`, `1:30` or `5 km in 25:00`.
 String describeSet(ExerciseSet set, TrackingType type, UnitSystem units) {

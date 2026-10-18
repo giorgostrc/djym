@@ -1,10 +1,10 @@
+import 'package:djym/data/repositories/settings_repository.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/data/services/rest_alerts.dart';
+import 'package:djym/domain/rest.dart';
+import 'package:djym/ui/core/clock_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/repositories/settings_repository.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/data/services/rest_alerts.dart';
-import 'package:loggym/domain/rest.dart';
-import 'package:loggym/ui/core/clock_provider.dart';
 
 class RestTimer extends Notifier<Rest?> {
   int? _sessionId;

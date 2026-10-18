@@ -1,3 +1,12 @@
+import 'package:djym/app.dart';
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/database/database_provider.dart';
+import 'package:djym/data/repositories/exercise_repository.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/data/services/wger_client.dart';
+import 'package:djym/domain/tracking_type.dart';
+import 'package:djym/ui/core/clock_provider.dart';
+import 'package:djym/ui/core/keep_screen_on.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -5,15 +14,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:loggym/app.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/database/database_provider.dart';
-import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/data/services/wger_client.dart';
-import 'package:loggym/domain/tracking_type.dart';
-import 'package:loggym/ui/core/clock_provider.dart';
-import 'package:loggym/ui/core/keep_screen_on.dart';
 
 void main() {
   late AppDatabase database;

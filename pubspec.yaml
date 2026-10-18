@@ -1,4 +1,4 @@
-name: loggym
+name: djym
 description: "djym: a local-first gym logger."
 publish_to: 'none'
 version: 0.1.0

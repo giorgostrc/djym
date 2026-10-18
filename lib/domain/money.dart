@@ -1,5 +1,5 @@
+import 'package:djym/domain/unit_system.dart';
 import 'package:intl/intl.dart';
-import 'package:loggym/domain/unit_system.dart';
 
 String formatMoney(int cents, String currencyCode) =>
     NumberFormat.simpleCurrency(name: currencyCode).format(cents / 100);

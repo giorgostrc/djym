@@ -1,10 +1,10 @@
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/database/database_provider.dart';
+import 'package:djym/data/repositories/subscription_repository.dart';
+import 'package:djym/domain/tracking_type.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/database/database_provider.dart';
-import 'package:loggym/data/repositories/subscription_repository.dart';
-import 'package:loggym/domain/tracking_type.dart';
 
 class SessionExercise {
   const SessionExercise(this.exercise, this.sets);

@@ -1,10 +1,10 @@
 // Drift column check constraints reference their own getter by design.
 // ignore_for_file: recursive_getters
 
+import 'package:djym/domain/theme_preference.dart';
+import 'package:djym/domain/tracking_type.dart';
+import 'package:djym/domain/unit_system.dart';
 import 'package:drift/drift.dart';
-import 'package:loggym/domain/theme_preference.dart';
-import 'package:loggym/domain/tracking_type.dart';
-import 'package:loggym/domain/unit_system.dart';
 
 class Exercises extends Table {
   IntColumn get id => integer().autoIncrement()();

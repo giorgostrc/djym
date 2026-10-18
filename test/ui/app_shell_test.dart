@@ -1,10 +1,10 @@
+import 'package:djym/app.dart';
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/database/database_provider.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loggym/app.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/database/database_provider.dart';
 
 void main() {
   late AppDatabase database;

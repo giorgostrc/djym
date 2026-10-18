@@ -1,9 +1,9 @@
 import 'dart:io';
 
+import 'package:djym/data/database/app_database.dart';
 import 'package:drift/drift.dart' show TableUpdate;
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/database/app_database.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 

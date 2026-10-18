@@ -1,14 +1,14 @@
+import 'package:djym/data/repositories/settings_repository.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/routing/routes.dart';
+import 'package:djym/ui/exercises/exercise_avatar.dart';
+import 'package:djym/ui/session/logged_set_tile.dart';
+import 'package:djym/ui/session/set_description.dart';
+import 'package:djym/ui/subscriptions/subscription_choice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/data/repositories/settings_repository.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/routing/routes.dart';
-import 'package:loggym/ui/exercises/exercise_avatar.dart';
-import 'package:loggym/ui/session/logged_set_tile.dart';
-import 'package:loggym/ui/session/set_description.dart';
-import 'package:loggym/ui/subscriptions/subscription_choice.dart';
 
 /// Read-only look at a finished workout, with Edit and Delete.
 class SessionDetailScreen extends ConsumerWidget {

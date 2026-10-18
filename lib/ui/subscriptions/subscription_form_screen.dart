@@ -1,15 +1,15 @@
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/repositories/settings_repository.dart';
+import 'package:djym/data/repositories/subscription_repository.dart';
+import 'package:djym/domain/money.dart';
+import 'package:djym/domain/subscription_period.dart';
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/ui/core/text_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/repositories/settings_repository.dart';
-import 'package:loggym/data/repositories/subscription_repository.dart';
-import 'package:loggym/domain/money.dart';
-import 'package:loggym/domain/subscription_period.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/ui/core/text_input.dart';
 
 const _presetMonths = [1, 3, 12];
 

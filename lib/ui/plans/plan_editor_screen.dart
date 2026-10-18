@@ -1,13 +1,13 @@
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/repositories/exercise_repository.dart';
+import 'package:djym/data/repositories/plan_repository.dart';
+import 'package:djym/routing/routes.dart';
+import 'package:djym/ui/core/text_input.dart';
+import 'package:djym/ui/exercises/exercise_avatar.dart';
+import 'package:djym/ui/exercises/exercise_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/data/repositories/plan_repository.dart';
-import 'package:loggym/routing/routes.dart';
-import 'package:loggym/ui/core/text_input.dart';
-import 'package:loggym/ui/exercises/exercise_avatar.dart';
-import 'package:loggym/ui/exercises/exercise_picker.dart';
 
 const _defaultTargetSets = 3;
 

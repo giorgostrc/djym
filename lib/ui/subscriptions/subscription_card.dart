@@ -1,11 +1,11 @@
+import 'package:djym/data/repositories/settings_repository.dart';
+import 'package:djym/data/repositories/subscription_repository.dart';
+import 'package:djym/domain/money.dart';
+import 'package:djym/routing/routes.dart';
+import 'package:djym/ui/subscriptions/subscription_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/data/repositories/settings_repository.dart';
-import 'package:loggym/data/repositories/subscription_repository.dart';
-import 'package:loggym/domain/money.dart';
-import 'package:loggym/routing/routes.dart';
-import 'package:loggym/ui/subscriptions/subscription_text.dart';
 
 /// The Calendar's subscription cards, or a way to add the first one.
 class SubscriptionSection extends ConsumerWidget {

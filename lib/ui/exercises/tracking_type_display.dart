@@ -1,5 +1,5 @@
+import 'package:djym/domain/tracking_type.dart';
 import 'package:flutter/material.dart';
-import 'package:loggym/domain/tracking_type.dart';
 
 extension TrackingTypeDisplay on TrackingType {
   String get label => switch (this) {

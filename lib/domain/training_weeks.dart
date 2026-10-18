@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:loggym/domain/subscription_period.dart';
+import 'package:djym/domain/subscription_period.dart';
 
 /// Monday of the week [day] falls in.
 DateTime weekStart(DateTime day) {

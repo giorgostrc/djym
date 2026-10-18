@@ -1,6 +1,6 @@
+import 'package:djym/domain/theme_preference.dart';
+import 'package:djym/ui/core/brand_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:loggym/domain/theme_preference.dart';
-import 'package:loggym/ui/core/brand_colors.dart';
 
 /// Roles come straight from the palette; containers and text use tints and
 /// shades of it so contrast holds in both themes. Dark surfaces sit on the

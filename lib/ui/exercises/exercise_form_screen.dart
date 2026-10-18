@@ -1,21 +1,21 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/repositories/exercise_repository.dart';
+import 'package:djym/data/services/ai_client.dart';
+import 'package:djym/data/services/exercise_autofill.dart';
+import 'package:djym/data/services/wger_client.dart';
+import 'package:djym/domain/tracking_type.dart';
+import 'package:djym/ui/core/text_input.dart';
+import 'package:djym/ui/exercises/ai_fill_tile.dart';
+import 'package:djym/ui/exercises/remove_exercise.dart';
+import 'package:djym/ui/exercises/tracking_type_display.dart';
+import 'package:djym/ui/exercises/wger_suggestions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/data/services/ai_client.dart';
-import 'package:loggym/data/services/exercise_autofill.dart';
-import 'package:loggym/data/services/wger_client.dart';
-import 'package:loggym/domain/tracking_type.dart';
-import 'package:loggym/ui/core/text_input.dart';
-import 'package:loggym/ui/exercises/ai_fill_tile.dart';
-import 'package:loggym/ui/exercises/remove_exercise.dart';
-import 'package:loggym/ui/exercises/tracking_type_display.dart';
-import 'package:loggym/ui/exercises/wger_suggestions.dart';
 
 final imagePickerProvider = Provider<ImagePicker>((ref) => ImagePicker());
 

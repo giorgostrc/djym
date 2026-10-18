@@ -1,8 +1,8 @@
+import 'package:djym/domain/rest.dart';
+import 'package:djym/ui/core/brand_colors.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/domain/rest.dart';
-import 'package:loggym/ui/core/brand_colors.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 const _countdownId = 1;

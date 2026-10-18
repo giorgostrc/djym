@@ -1,6 +1,6 @@
+import 'package:djym/ui/core/text_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loggym/ui/core/text_input.dart';
 
 void main() {
   testWidgets('focusing selects the whole value, a second tap does not', (

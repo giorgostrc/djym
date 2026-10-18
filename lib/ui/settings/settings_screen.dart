@@ -1,12 +1,12 @@
+import 'package:djym/data/repositories/settings_repository.dart';
+import 'package:djym/data/services/ai_settings_store.dart';
+import 'package:djym/domain/theme_preference.dart';
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/routing/routes.dart';
+import 'package:djym/ui/settings/backup_tiles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/data/repositories/settings_repository.dart';
-import 'package:loggym/data/services/ai_settings_store.dart';
-import 'package:loggym/domain/theme_preference.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/routing/routes.dart';
-import 'package:loggym/ui/settings/backup_tiles.dart';
 
 const _currencies = [
   'EUR',

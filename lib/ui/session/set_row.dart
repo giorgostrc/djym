@@ -1,13 +1,13 @@
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/domain/tracking_type.dart';
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/ui/core/text_input.dart';
+import 'package:djym/ui/session/rest_timer.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/domain/tracking_type.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/ui/core/text_input.dart';
-import 'package:loggym/ui/session/rest_timer.dart';
 
 /// One editable set. Every change is written straight to the database, so
 /// the controllers are seeded once and never reset from later rebuilds.

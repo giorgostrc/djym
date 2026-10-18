@@ -1,19 +1,19 @@
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/repositories/settings_repository.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/routing/routes.dart';
+import 'package:djym/ui/calendar/selected_day_provider.dart';
+import 'package:djym/ui/core/clock_provider.dart';
+import 'package:djym/ui/core/placeholder_body.dart';
+import 'package:djym/ui/exercises/exercise_picker.dart';
+import 'package:djym/ui/session/exercise_card.dart';
+import 'package:djym/ui/session/rest_bar.dart';
+import 'package:djym/ui/session/rest_timer.dart';
+import 'package:djym/ui/session/session_summary_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/repositories/settings_repository.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/routing/routes.dart';
-import 'package:loggym/ui/calendar/selected_day_provider.dart';
-import 'package:loggym/ui/core/clock_provider.dart';
-import 'package:loggym/ui/core/placeholder_body.dart';
-import 'package:loggym/ui/exercises/exercise_picker.dart';
-import 'package:loggym/ui/session/exercise_card.dart';
-import 'package:loggym/ui/session/rest_bar.dart';
-import 'package:loggym/ui/session/rest_timer.dart';
-import 'package:loggym/ui/session/session_summary_sheet.dart';
 
 class SessionScreen extends ConsumerStatefulWidget {
   const SessionScreen({

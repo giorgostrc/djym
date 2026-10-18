@@ -1,11 +1,11 @@
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/repositories/exercise_history_repository.dart';
+import 'package:djym/data/repositories/exercise_repository.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/domain/tracking_type.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/repositories/exercise_history_repository.dart';
-import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/domain/tracking_type.dart';
 
 void main() {
   late AppDatabase database;

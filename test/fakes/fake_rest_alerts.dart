@@ -1,5 +1,5 @@
-import 'package:loggym/data/services/rest_alerts.dart';
-import 'package:loggym/domain/rest.dart';
+import 'package:djym/data/services/rest_alerts.dart';
+import 'package:djym/domain/rest.dart';
 
 class FakeRestAlerts implements RestAlerts {
   FakeRestAlerts({this.notificationsEnabled = true});

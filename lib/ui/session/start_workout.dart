@@ -1,9 +1,9 @@
+import 'package:djym/data/repositories/plan_repository.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/routing/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/data/repositories/plan_repository.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/routing/routes.dart';
 
 /// Starts today's workout, or offers to resume the one already running.
 /// An empty workout opens straight into the exercise picker.

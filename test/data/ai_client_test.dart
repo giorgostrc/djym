@@ -1,10 +1,10 @@
 import 'dart:convert';
 
+import 'package:djym/data/services/ai_client.dart';
+import 'package:djym/domain/ai_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:loggym/data/services/ai_client.dart';
-import 'package:loggym/domain/ai_provider.dart';
 
 void main() {
   const schema = {

@@ -1,7 +1,7 @@
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/ui/subscriptions/subscription_choice.dart';
 import 'package:flutter/material.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/ui/subscriptions/subscription_choice.dart';
 
 class SessionSummarySheet extends StatelessWidget {
   const SessionSummarySheet({

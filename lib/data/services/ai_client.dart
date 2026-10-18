@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:djym/data/services/ai_settings_store.dart';
+import 'package:djym/domain/ai_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-import 'package:loggym/data/services/ai_settings_store.dart';
-import 'package:loggym/domain/ai_provider.dart';
 
 const _timeout = Duration(seconds: 45);
 const _anthropicVersion = '2023-06-01';

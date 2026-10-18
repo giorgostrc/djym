@@ -1,5 +1,5 @@
+import 'package:djym/data/repositories/exercise_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:loggym/data/repositories/exercise_repository.dart';
 
 Future<void> removeExerciseWithUndo({
   required ScaffoldMessengerState messenger,

@@ -1,10 +1,10 @@
+import 'package:djym/data/repositories/plan_repository.dart';
+import 'package:djym/routing/routes.dart';
+import 'package:djym/ui/core/placeholder_body.dart';
+import 'package:djym/ui/session/start_workout.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/data/repositories/plan_repository.dart';
-import 'package:loggym/routing/routes.dart';
-import 'package:loggym/ui/core/placeholder_body.dart';
-import 'package:loggym/ui/session/start_workout.dart';
 
 class PlansScreen extends ConsumerWidget {
   const PlansScreen({super.key});

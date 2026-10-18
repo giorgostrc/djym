@@ -1,9 +1,9 @@
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/database/database_provider.dart';
+import 'package:djym/domain/theme_preference.dart';
+import 'package:djym/domain/unit_system.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/database/database_provider.dart';
-import 'package:loggym/domain/theme_preference.dart';
-import 'package:loggym/domain/unit_system.dart';
 
 class SettingsRepository {
   const SettingsRepository(this._database);

@@ -1,7 +1,7 @@
+import 'package:djym/data/repositories/subscription_repository.dart';
+import 'package:djym/domain/money.dart';
+import 'package:djym/domain/subscription_period.dart';
 import 'package:intl/intl.dart';
-import 'package:loggym/data/repositories/subscription_repository.dart';
-import 'package:loggym/domain/money.dart';
-import 'package:loggym/domain/subscription_period.dart';
 
 String describeDateRange(SubscriptionPeriod period) {
   final sameYear = period.start.year == period.end.year;

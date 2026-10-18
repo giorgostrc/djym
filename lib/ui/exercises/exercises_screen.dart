@@ -1,12 +1,12 @@
+import 'package:djym/data/repositories/exercise_repository.dart';
+import 'package:djym/routing/routes.dart';
+import 'package:djym/ui/core/placeholder_body.dart';
+import 'package:djym/ui/exercises/exercise_avatar.dart';
+import 'package:djym/ui/exercises/exercise_search.dart';
+import 'package:djym/ui/exercises/remove_exercise.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/data/repositories/exercise_repository.dart';
-import 'package:loggym/routing/routes.dart';
-import 'package:loggym/ui/core/placeholder_body.dart';
-import 'package:loggym/ui/exercises/exercise_avatar.dart';
-import 'package:loggym/ui/exercises/exercise_search.dart';
-import 'package:loggym/ui/exercises/remove_exercise.dart';
 
 class ExercisesScreen extends ConsumerWidget {
   const ExercisesScreen({super.key});

@@ -1,5 +1,5 @@
+import 'package:djym/domain/rest.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loggym/domain/rest.dart';
 
 void main() {
   final start = DateTime(2026, 10, 18, 18);

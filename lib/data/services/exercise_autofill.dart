@@ -1,5 +1,5 @@
-import 'package:loggym/data/services/ai_client.dart';
-import 'package:loggym/domain/tracking_type.dart';
+import 'package:djym/data/services/ai_client.dart';
+import 'package:djym/domain/tracking_type.dart';
 
 const _instructions = '''
 You fill in exercise entries for a gym logging app. Given an exercise name:

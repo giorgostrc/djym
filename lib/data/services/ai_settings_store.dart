@@ -1,8 +1,8 @@
 import 'dart:convert';
 
+import 'package:djym/domain/ai_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:loggym/domain/ai_provider.dart';
 
 const _storageKey = 'ai_settings';
 

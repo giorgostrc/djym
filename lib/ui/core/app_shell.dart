@@ -1,6 +1,6 @@
+import 'package:djym/ui/core/workout_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/ui/core/workout_banner.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({required this.navigationShell, super.key});

@@ -1,12 +1,12 @@
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/routing/routes.dart';
+import 'package:djym/ui/core/clock_provider.dart';
+import 'package:djym/ui/session/rest_bar.dart';
+import 'package:djym/ui/session/rest_timer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/routing/routes.dart';
-import 'package:loggym/ui/core/clock_provider.dart';
-import 'package:loggym/ui/session/rest_bar.dart';
-import 'package:loggym/ui/session/rest_timer.dart';
 
 /// Shown above the tab bar on every tab while a workout runs.
 class WorkoutBanner extends ConsumerWidget {

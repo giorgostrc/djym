@@ -1,9 +1,9 @@
+import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/repositories/workout_session_repository.dart';
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/ui/session/logged_set_tile.dart';
+import 'package:djym/ui/session/set_description.dart';
 import 'package:flutter/material.dart';
-import 'package:loggym/data/database/app_database.dart';
-import 'package:loggym/data/repositories/workout_session_repository.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/ui/session/logged_set_tile.dart';
-import 'package:loggym/ui/session/set_description.dart';
 
 Future<void> showLastPerformance(
   BuildContext context, {

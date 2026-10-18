@@ -1,11 +1,11 @@
 import 'dart:async';
 
+import 'package:djym/app.dart';
+import 'package:djym/data/services/rest_alerts.dart';
+import 'package:djym/routing/router.dart';
+import 'package:djym/routing/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/app.dart';
-import 'package:loggym/data/services/rest_alerts.dart';
-import 'package:loggym/routing/router.dart';
-import 'package:loggym/routing/routes.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

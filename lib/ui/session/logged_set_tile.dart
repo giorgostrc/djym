@@ -1,5 +1,5 @@
+import 'package:djym/data/database/app_database.dart';
 import 'package:flutter/material.dart';
-import 'package:loggym/data/database/app_database.dart';
 
 /// A read-only set with its comment, as shown in history.
 class LoggedSetTile extends StatelessWidget {

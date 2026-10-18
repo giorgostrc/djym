@@ -1,5 +1,5 @@
+import 'package:djym/domain/subscription_period.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:loggym/domain/subscription_period.dart';
 
 void main() {
   test('month presets end the day before the same date next month', () {

@@ -1,8 +1,8 @@
+import 'package:djym/domain/unit_system.dart';
+import 'package:djym/ui/core/clock_provider.dart';
+import 'package:djym/ui/session/rest_timer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:loggym/domain/unit_system.dart';
-import 'package:loggym/ui/core/clock_provider.dart';
-import 'package:loggym/ui/session/rest_timer.dart';
 
 const _step = Duration(seconds: 15);
 
