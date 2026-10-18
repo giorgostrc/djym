@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:loggym/domain/rest.dart';
+import 'package:loggym/ui/core/brand_colors.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 const _countdownId = 1;
@@ -61,6 +62,7 @@ class RestAlerts {
           'rest_countdown',
           'Rest countdown',
           channelDescription: 'Time left while resting between sets',
+          color: BrandColors.deepTeal,
           importance: Importance.low,
           priority: Priority.low,
           silent: true,
@@ -85,6 +87,7 @@ class RestAlerts {
           'rest_over',
           'Rest over',
           channelDescription: 'Alerts you when it is time for the next set',
+          color: BrandColors.deepTeal,
           importance: Importance.max,
           priority: Priority.high,
           category: AndroidNotificationCategory.alarm,

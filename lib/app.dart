@@ -7,8 +7,8 @@ import 'package:loggym/routing/router.dart';
 import 'package:loggym/ui/core/app_theme.dart';
 import 'package:loggym/ui/core/keep_screen_on.dart';
 
-class LogGymApp extends ConsumerWidget {
-  const LogGymApp({super.key});
+class DjymApp extends ConsumerWidget {
+  const DjymApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -21,7 +21,7 @@ class LogGymApp extends ConsumerWidget {
         ThemePreference.system;
 
     return MaterialApp.router(
-      title: 'LogGym',
+      title: 'djym',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: AppTheme.modeFor(themePreference),

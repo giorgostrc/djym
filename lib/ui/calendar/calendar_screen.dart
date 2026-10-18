@@ -8,6 +8,8 @@ import 'package:loggym/domain/unit_system.dart';
 import 'package:loggym/routing/routes.dart';
 import 'package:loggym/ui/calendar/selected_day_provider.dart';
 import 'package:loggym/ui/calendar/year_view.dart';
+import 'package:loggym/ui/core/brand_colors.dart';
+import 'package:loggym/ui/core/wordmark.dart';
 import 'package:loggym/ui/session/start_workout.dart';
 import 'package:loggym/ui/subscriptions/subscription_card.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -71,7 +73,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('LogGym')),
+      appBar: AppBar(title: const Wordmark()),
       floatingActionButton: switch (selectedDay.compareTo(today)) {
         _ when _showingYear => null,
         < 0 => FloatingActionButton.extended(
@@ -131,7 +133,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               focusedDay: _focusedDay,
               startingDayOfWeek: StartingDayOfWeek.monday,
               availableCalendarFormats: const {CalendarFormat.month: 'Month'},
-              calendarStyle: const CalendarStyle(markersMaxCount: 3),
+              calendarStyle: _calendarStyle(Theme.of(context)),
+              headerStyle: HeaderStyle(
+                titleTextStyle: Theme.of(context).textTheme.titleLarge!,
+              ),
+              daysOfWeekStyle: DaysOfWeekStyle(
+                weekdayStyle: Theme.of(context).textTheme.labelMedium!.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                weekendStyle: Theme.of(context).textTheme.labelMedium!.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
               selectedDayPredicate: (day) => isSameDay(day, selectedDay),
               eventLoader: (day) => [
                 for (final overview in sessions)
@@ -169,6 +182,38 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ),
     );
   }
+}
+
+/// Selected day filled, today outlined, workout dots in coral.
+CalendarStyle _calendarStyle(ThemeData theme) {
+  final colors = theme.colorScheme;
+  final day = theme.textTheme.bodyLarge!.copyWith(color: colors.onSurface);
+  return CalendarStyle(
+    markersMaxCount: 3,
+    markerDecoration: const BoxDecoration(
+      color: BrandColors.coral,
+      shape: BoxShape.circle,
+    ),
+    defaultTextStyle: day,
+    weekendTextStyle: day,
+    outsideTextStyle: day.copyWith(color: colors.outline),
+    selectedDecoration: BoxDecoration(
+      color: colors.primary,
+      shape: BoxShape.circle,
+    ),
+    selectedTextStyle: day.copyWith(
+      color: colors.onPrimary,
+      fontWeight: FontWeight.w600,
+    ),
+    todayDecoration: BoxDecoration(
+      shape: BoxShape.circle,
+      border: Border.all(color: colors.primary, width: 1.5),
+    ),
+    todayTextStyle: day.copyWith(
+      color: colors.primary,
+      fontWeight: FontWeight.w600,
+    ),
+  );
 }
 
 class _Greeting extends StatelessWidget {

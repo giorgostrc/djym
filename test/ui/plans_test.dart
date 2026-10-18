@@ -42,7 +42,7 @@ void main() {
           clockProvider.overrideWith((ref) => Stream.value(DateTime.now())),
           keepScreenOnProvider.overrideWithValue(({required on}) async {}),
         ],
-        child: const LogGymApp(),
+        child: const DjymApp(),
       ),
     );
     await tester.pumpAndSettle();

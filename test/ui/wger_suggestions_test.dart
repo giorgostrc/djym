@@ -42,7 +42,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(database),
           wgerClientProvider.overrideWithValue(WgerClient(wger ?? onlineWger)),
         ],
-        child: const LogGymApp(),
+        child: const DjymApp(),
       ),
     );
     await tester.pumpAndSettle();

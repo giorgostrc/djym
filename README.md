@@ -1,4 +1,4 @@
-# LogGym
+# djym
 
 Local-first gym session logger for Android and iOS.
 
@@ -71,3 +71,11 @@ Commit `drift_schemas/`, `*.steps.dart` and `test/drift/`; only `*.g.dart` is ig
 - Money is stored as integer cents.
 - A single `settings` row is seeded on database creation, so the backup file also carries user preferences.
 - Exercise photos are stored as JPEG/PNG blobs in `exercise_thumbnails` (one row per exercise, user photos capped at 256 px), so a backup is the single database file.
+
+## Brand
+
+djym (djinn + gym) uses five colours, mapped to Material roles in `lib/ui/core/app_theme.dart`:
+deep teal `#1A535C`, turquoise `#4ECDC4`, mint `#F7FFF7`, coral `#FF6B6B`, sunshine `#FFE66D`.
+The dark theme sits on two neutral grey-blue shades: ink `#141E24` (background) and slate `#22313A` (cards).
+Headings and the wordmark use Fredoka (SIL OFL, `assets/fonts/`); body text keeps the platform font.
+Launcher icons and the in-app logo come from `tool/brand/djym-icon.jpg` via `tool/brand/make_icons.py`.

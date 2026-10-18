@@ -48,7 +48,7 @@ class _BackupTilesState extends ConsumerState<BackupTiles> {
       final result = await SharePlus.instance.share(
         ShareParams(
           files: [XFile(backup.path, mimeType: 'application/octet-stream')],
-          subject: 'LogGym backup',
+          subject: 'djym backup',
         ),
       );
       if (result.status != ShareResultStatus.dismissed) {
@@ -70,14 +70,14 @@ class _BackupTilesState extends ConsumerState<BackupTiles> {
       info = service.inspect(backup);
     } on FormatException {
       return _explain(
-        'Not a LogGym backup',
-        'Choose a .db file exported from LogGym.',
+        'Not a djym backup',
+        'Choose a .db file exported from djym.',
       );
     }
     if (info.schemaVersion > AppDatabase.currentSchemaVersion) {
       return _explain(
         'Backup from a newer app',
-        'Update LogGym, then import this backup again.',
+        'Update djym, then import this backup again.',
       );
     }
     if (!await _confirmReplace(info) || !mounted) return;

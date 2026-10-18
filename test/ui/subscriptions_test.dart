@@ -35,7 +35,7 @@ void main() {
           keepScreenOnProvider.overrideWithValue(({required on}) async {}),
           restAlertsProvider.overrideWithValue(FakeRestAlerts()),
         ],
-        child: const LogGymApp(),
+        child: const DjymApp(),
       ),
     );
     await tester.pumpAndSettle();

@@ -6,6 +6,7 @@ import 'package:loggym/data/repositories/stats_repository.dart';
 import 'package:loggym/domain/money.dart';
 import 'package:loggym/domain/subscription_period.dart';
 import 'package:loggym/domain/unit_system.dart';
+import 'package:loggym/ui/core/brand_colors.dart';
 import 'package:loggym/ui/exercises/exercise_avatar.dart';
 
 /// A year at a glance: headline numbers, a heatmap of training days per
@@ -216,11 +217,17 @@ class _StatTile extends StatelessWidget {
   }
 }
 
-Color _dayColor(ColorScheme colors, int workouts) => switch (workouts) {
-  0 => colors.surfaceContainerHighest,
-  1 => colors.primary.withValues(alpha: 0.45),
-  _ => colors.primary,
-};
+/// Turquoise for one workout, the stronger brand colour for more.
+Color _dayColor(ColorScheme colors, int workouts) {
+  final dark = colors.brightness == Brightness.dark;
+  return switch (workouts) {
+    0 when dark => colors.surfaceContainer,
+    0 => colors.surfaceContainerHighest,
+    1 when dark => colors.primary.withValues(alpha: 0.55),
+    1 => BrandColors.turquoise,
+    _ => colors.primary,
+  };
+}
 
 class _MonthGrid extends StatelessWidget {
   const _MonthGrid({

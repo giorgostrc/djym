@@ -88,7 +88,7 @@ Future<void> startRestAfterSet(
       icon: const Icon(Icons.notifications_active_outlined),
       title: const Text('Alert when rest is over?'),
       content: const Text(
-        'LogGym can buzz you when it is time for the next set, '
+        'djym can buzz you when it is time for the next set, '
         'even with the phone locked.',
       ),
       actions: [

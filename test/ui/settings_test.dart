@@ -19,7 +19,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(database)],
-        child: const LogGymApp(),
+        child: const DjymApp(),
       ),
     );
     await tester.pumpAndSettle();

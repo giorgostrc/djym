@@ -55,7 +55,7 @@ void main() {
 
     expect(
       backup.path,
-      matches(RegExp(r'loggym-backup-\d{4}-\d{2}-\d{2}\.db$')),
+      matches(RegExp(r'djym-backup-\d{4}-\d{2}-\d{2}\.db$')),
     );
     expect(info.schemaVersion, AppDatabase.currentSchemaVersion);
     expect(info.workoutCount, 1);

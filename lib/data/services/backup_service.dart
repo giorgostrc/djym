@@ -37,7 +37,7 @@ class BackupService {
     required Directory destination,
   }) async {
     final date = DateTime.now().toIso8601String().substring(0, 10);
-    final backup = File('${destination.path}/loggym-backup-$date.db');
+    final backup = File('${destination.path}/djym-backup-$date.db');
     await destination.create(recursive: true);
     if (backup.existsSync()) await backup.delete();
     await database.customStatement('VACUUM INTO ?', [backup.path]);
@@ -66,7 +66,7 @@ class BackupService {
         database.dispose();
       }
     } on SqliteException {
-      throw const FormatException('Not a LogGym backup');
+      throw const FormatException('Not a djym backup');
     }
   }
 

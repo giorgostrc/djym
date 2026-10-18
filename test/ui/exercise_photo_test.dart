@@ -66,7 +66,7 @@ void main() {
             ),
           ),
         ],
-        child: const LogGymApp(),
+        child: const DjymApp(),
       ),
     );
     await tester.pumpAndSettle();

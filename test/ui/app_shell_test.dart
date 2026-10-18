@@ -19,7 +19,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [appDatabaseProvider.overrideWithValue(database)],
-        child: const LogGymApp(),
+        child: const DjymApp(),
       ),
     );
     await tester.pumpAndSettle();
@@ -34,7 +34,7 @@ void main() {
     tester,
   ) async {
     await pumpApp(tester);
-    expect(find.text('LogGym'), findsOneWidget);
+    expect(find.text('djym'), findsOneWidget);
 
     await tester.tap(find.text('Plans'));
     await tester.pumpAndSettle();
