@@ -122,6 +122,8 @@ void main() {
     await openExercisesTab(tester);
     await tester.tap(find.text('Dips'));
     await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Edit exercise'));
+    await tester.pumpAndSettle();
 
     await choosePhotoOption(tester, 'Remove photo');
     await tester.tap(find.text('Save'));

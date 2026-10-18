@@ -60,7 +60,7 @@ extension ExerciseSetValues on ExerciseSet {
 }
 
 /// Orders sets so the best one for [type] comes first.
-int _compareBest(TrackingType type, ExerciseSet a, ExerciseSet b) {
+int compareBest(TrackingType type, ExerciseSet a, ExerciseSet b) {
   int descending(num? x, num? y) => (y ?? 0).compareTo(x ?? 0);
   return switch (type) {
     TrackingType.weightReps =>
@@ -76,10 +76,10 @@ int _compareBest(TrackingType type, ExerciseSet a, ExerciseSet b) {
   };
 }
 
-ExerciseSet? _best(TrackingType type, Iterable<ExerciseSet> sets) {
+ExerciseSet? bestSet(TrackingType type, Iterable<ExerciseSet> sets) {
   final logged = sets.where((set) => set.hasValues).toList();
   if (logged.isEmpty) return null;
-  return (logged..sort((a, b) => _compareBest(type, a, b))).first;
+  return (logged..sort((a, b) => compareBest(type, a, b))).first;
 }
 
 class WorkoutSessionRepository {
@@ -328,7 +328,7 @@ class WorkoutSessionRepository {
     final lastSession = rows.first.readTable(_sessions);
     final sets = [for (final row in rows) row.readTable(_sets)];
     return ExerciseRecords(
-      allTimeBest: _best(exercise.trackingType, sets),
+      allTimeBest: bestSet(exercise.trackingType, sets),
       lastPerformance: LastPerformance(
         date: lastSession.startedAt,
         sets: [

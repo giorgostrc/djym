@@ -5,7 +5,7 @@ abstract final class Routes {
   static const settings = '/settings';
   static const workoutSession = '/session/:id';
   static const newExercise = '/exercises/new';
-  static const editExercise = '/exercises/:id';
+  static const editExercise = '/exercises/:id/edit';
   static const newPlan = '/plans/new';
   static const editPlan = '/plans/:id';
   static const subscriptions = '/calendar/subscriptions';
@@ -13,6 +13,11 @@ abstract final class Routes {
   static const editSubscription = '/subscriptions/:id';
 
   static String exercise(int id) => '/exercises/$id';
+
+  static String exerciseEdit(int id) => '/exercises/$id/edit';
+
+  static String exerciseWorkout(int exerciseId, int sessionId) =>
+      '/exercises/$exerciseId/sessions/$sessionId';
 
   static String sessionDetail(int id) => '/calendar/sessions/$id';
 

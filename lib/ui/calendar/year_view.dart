@@ -7,6 +7,7 @@ import 'package:loggym/domain/money.dart';
 import 'package:loggym/domain/subscription_period.dart';
 import 'package:loggym/domain/unit_system.dart';
 import 'package:loggym/ui/core/brand_colors.dart';
+import 'package:loggym/ui/core/stat_tile.dart';
 import 'package:loggym/ui/exercises/exercise_avatar.dart';
 
 /// A year at a glance: headline numbers, a heatmap of training days per
@@ -177,41 +178,11 @@ class _Headline extends ConsumerWidget {
               for (final (value, label) in tiles)
                 SizedBox(
                   width: width,
-                  child: _StatTile(value: value, label: label),
+                  child: StatTile(value: value, label: label),
                 ),
             ],
           );
         },
-      ),
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  const _StatTile({required this.value, required this.label});
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card.filled(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(value, style: theme.textTheme.titleLarge),
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

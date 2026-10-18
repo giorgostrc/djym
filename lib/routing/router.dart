@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:loggym/routing/routes.dart';
 import 'package:loggym/ui/calendar/calendar_screen.dart';
 import 'package:loggym/ui/core/app_shell.dart';
+import 'package:loggym/ui/exercises/exercise_detail_screen.dart';
 import 'package:loggym/ui/exercises/exercise_form_screen.dart';
 import 'package:loggym/ui/exercises/exercises_screen.dart';
 import 'package:loggym/ui/history/session_detail_screen.dart';
@@ -18,6 +19,16 @@ final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
     initialLocation: Routes.calendar,
     routes: [
+      // Before the shell so `/exercises/new` is not read as an exercise id.
+      GoRoute(
+        path: Routes.newExercise,
+        pageBuilder: (context, state) => MaterialPage(
+          fullscreenDialog: true,
+          child: ExerciseFormScreen(
+            initialTitle: state.uri.queryParameters['title'],
+          ),
+        ),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             AppShell(navigationShell: navigationShell),
@@ -55,6 +66,24 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: Routes.exercises,
                 builder: (context, state) => const ExercisesScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    builder: (context, state) => ExerciseDetailScreen(
+                      exerciseId: int.parse(state.pathParameters['id']!),
+                    ),
+                    routes: [
+                      GoRoute(
+                        path: 'sessions/:sessionId',
+                        builder: (context, state) => SessionDetailScreen(
+                          sessionId: int.parse(
+                            state.pathParameters['sessionId']!,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
@@ -73,15 +102,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => SessionScreen(
           sessionId: int.parse(state.pathParameters['id']!),
           pickExercisesOnOpen: state.uri.queryParameters['pick'] == 'true',
-        ),
-      ),
-      GoRoute(
-        path: Routes.newExercise,
-        pageBuilder: (context, state) => MaterialPage(
-          fullscreenDialog: true,
-          child: ExerciseFormScreen(
-            initialTitle: state.uri.queryParameters['title'],
-          ),
         ),
       ),
       GoRoute(
