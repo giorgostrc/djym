@@ -6,6 +6,7 @@ import 'package:loggym/domain/theme_preference.dart';
 import 'package:loggym/routing/router.dart';
 import 'package:loggym/ui/core/app_theme.dart';
 import 'package:loggym/ui/core/keep_screen_on.dart';
+import 'package:loggym/ui/core/text_input.dart';
 
 class DjymApp extends ConsumerWidget {
   const DjymApp({super.key});
@@ -26,6 +27,7 @@ class DjymApp extends ConsumerWidget {
       darkTheme: AppTheme.dark,
       themeMode: AppTheme.modeFor(themePreference),
       routerConfig: ref.watch(routerProvider),
+      actions: {...WidgetsApp.defaultActions, ...unfocusOnTapOutside},
     );
   }
 }

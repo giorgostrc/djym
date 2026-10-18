@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:loggym/ui/core/app_theme.dart';
 
 /// The djinn and the lowercase name, as the Calendar's title.
 class Wordmark extends StatelessWidget {
@@ -18,10 +17,9 @@ class Wordmark extends StatelessWidget {
           Text(
             'djym',
             style: TextStyle(
-              fontFamily: brandFontFamily,
-              fontWeight: FontWeight.w600,
-              fontSize: 30,
-              letterSpacing: 0.5,
+              fontWeight: FontWeight.w700,
+              fontSize: 28,
+              letterSpacing: -0.5,
               color: Theme.of(context).colorScheme.primary,
             ),
           ),

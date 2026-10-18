@@ -5,6 +5,7 @@ import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
 import 'package:loggym/data/repositories/plan_repository.dart';
 import 'package:loggym/routing/routes.dart';
+import 'package:loggym/ui/core/text_input.dart';
 import 'package:loggym/ui/exercises/exercise_avatar.dart';
 import 'package:loggym/ui/exercises/exercise_picker.dart';
 
@@ -205,10 +206,14 @@ class _PlanEditorState extends ConsumerState<_PlanEditor> {
                 autofocus: widget.existing == null,
                 maxLength: 120,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Plan name',
                   hintText: 'e.g. Push day',
                   counterText: '',
+                  suffixIcon: clearButton(
+                    _name,
+                    onChanged: (_) => _markDirty(),
+                  ),
                 ),
                 validator: (value) => (value ?? '').trim().isEmpty
                     ? 'Give the plan a name'

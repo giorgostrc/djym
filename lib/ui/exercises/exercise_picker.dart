@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:loggym/data/repositories/exercise_repository.dart';
 import 'package:loggym/routing/routes.dart';
+import 'package:loggym/ui/core/text_input.dart';
 import 'package:loggym/ui/exercises/exercise_avatar.dart';
 import 'package:loggym/ui/exercises/exercise_search.dart';
 
@@ -24,7 +25,17 @@ class ExercisePicker extends ConsumerStatefulWidget {
 
 class _ExercisePickerState extends ConsumerState<ExercisePicker> {
   final _selectedIds = <int>[];
-  var _query = '';
+  final _search = TextEditingController();
+
+  String get _query => _search.text;
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  void _onQueryChanged(String _) => setState(() {});
 
   Future<void> _createExercise() async {
     final title = _query.trim();
@@ -55,12 +66,14 @@ class _ExercisePickerState extends ConsumerState<ExercisePicker> {
     return Scaffold(
       appBar: AppBar(
         title: TextField(
+          controller: _search,
           autofocus: true,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: 'Search exercises',
             border: InputBorder.none,
+            suffixIcon: clearButton(_search, onChanged: _onQueryChanged),
           ),
-          onChanged: (query) => setState(() => _query = query),
+          onChanged: _onQueryChanged,
         ),
       ),
       body: ListView(

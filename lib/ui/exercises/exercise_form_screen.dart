@@ -11,6 +11,7 @@ import 'package:loggym/data/services/ai_client.dart';
 import 'package:loggym/data/services/exercise_autofill.dart';
 import 'package:loggym/data/services/wger_client.dart';
 import 'package:loggym/domain/tracking_type.dart';
+import 'package:loggym/ui/core/text_input.dart';
 import 'package:loggym/ui/exercises/ai_fill_tile.dart';
 import 'package:loggym/ui/exercises/remove_exercise.dart';
 import 'package:loggym/ui/exercises/tracking_type_display.dart';
@@ -348,9 +349,10 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
                 autofocus: widget.existing == null,
                 maxLength: 120,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Title',
                   counterText: '',
+                  suffixIcon: clearButton(_title, onChanged: _onTitleChanged),
                 ),
                 validator: (value) => (value ?? '').trim().isEmpty
                     ? 'Give the exercise a title'

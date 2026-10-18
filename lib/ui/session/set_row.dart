@@ -6,6 +6,7 @@ import 'package:loggym/data/database/app_database.dart';
 import 'package:loggym/data/repositories/workout_session_repository.dart';
 import 'package:loggym/domain/tracking_type.dart';
 import 'package:loggym/domain/unit_system.dart';
+import 'package:loggym/ui/core/text_input.dart';
 import 'package:loggym/ui/session/rest_timer.dart';
 
 /// One editable set. Every change is written straight to the database, so
@@ -87,6 +88,13 @@ class _SetRowState extends ConsumerState<SetRow> {
           ),
         ),
       );
+  }
+
+  Future<void> _commentChanged(String text) async {
+    setState(() {});
+    await _write(
+      ExerciseSetsCompanion(comment: Value(text.trim().isEmpty ? null : text)),
+    );
   }
 
   Widget _weightField() => _NumberField(
@@ -213,18 +221,15 @@ class _SetRowState extends ConsumerState<SetRow> {
                   child: TextField(
                     controller: _comment,
                     textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       isDense: true,
                       hintText: 'Comment on this set',
+                      suffixIcon: clearButton(
+                        _comment,
+                        onChanged: _commentChanged,
+                      ),
                     ),
-                    onChanged: (text) async {
-                      setState(() {});
-                      await _write(
-                        ExerciseSetsCompanion(
-                          comment: Value(text.trim().isEmpty ? null : text),
-                        ),
-                      );
-                    },
+                    onChanged: _commentChanged,
                   ),
                 ),
             ],
@@ -235,7 +240,7 @@ class _SetRowState extends ConsumerState<SetRow> {
   }
 }
 
-class _NumberField extends StatelessWidget {
+class _NumberField extends StatefulWidget {
   const _NumberField({
     required this.controller,
     required this.label,
@@ -253,10 +258,28 @@ class _NumberField extends StatelessWidget {
   final Future<void> Function(String) onChanged;
 
   @override
+  State<_NumberField> createState() => _NumberFieldState();
+}
+
+class _NumberFieldState extends State<_NumberField> {
+  late final _focusNode = SelectAllFocusNode(widget.controller);
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final allowColon = widget.allowColon;
+    final decimal = widget.decimal;
+
     return TextField(
-      controller: controller,
+      controller: widget.controller,
+      focusNode: _focusNode,
       textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.titleMedium,
       textInputAction: TextInputAction.next,
       keyboardType: allowColon
           ? TextInputType.datetime
@@ -268,11 +291,11 @@ class _NumberField extends StatelessWidget {
       ],
       decoration: InputDecoration(
         isDense: true,
-        labelText: label,
-        hintText: hint,
+        labelText: widget.label,
+        hintText: widget.hint,
         border: const OutlineInputBorder(),
       ),
-      onChanged: onChanged,
+      onChanged: widget.onChanged,
     );
   }
 }

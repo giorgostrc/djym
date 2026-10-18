@@ -80,5 +80,5 @@ Commit `drift_schemas/`, `*.steps.dart` and `test/drift/`; only `*.g.dart` is ig
 djym (djinn + gym) uses five colours, mapped to Material roles in `lib/ui/core/app_theme.dart`:
 deep teal `#1A535C`, turquoise `#4ECDC4`, mint `#F7FFF7`, coral `#FF6B6B`, sunshine `#FFE66D`.
 The dark theme sits on two neutral grey-blue shades: ink `#141E24` (background) and slate `#22313A` (cards).
-Headings and the wordmark use Fredoka (SIL OFL, `assets/fonts/`); body text keeps the platform font.
+Type is Roboto, the platform font; headings and the wordmark use heavier weights.
 Launcher icons and the in-app logo come from `tool/brand/djym-icon.jpg` via `tool/brand/make_icons.py`.

@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:loggym/domain/theme_preference.dart';
 import 'package:loggym/ui/core/brand_colors.dart';
 
-/// Rounded display face for headings and the wordmark; body text stays in
-/// the platform font so numbers and exercise names read plainly.
-const brandFontFamily = 'Fredoka';
-
 /// Roles come straight from the palette; containers and text use tints and
 /// shades of it so contrast holds in both themes. Dark surfaces sit on the
 /// neutral ink and slate shades.
@@ -92,21 +88,27 @@ abstract final class AppTheme {
 
   static ThemeData _themeFrom(ColorScheme colors) {
     final base = ThemeData(colorScheme: colors);
-    TextStyle? brand(TextStyle? style) => style?.copyWith(
-      fontFamily: brandFontFamily,
+    // Roboto throughout; headings get weight and slightly tighter tracking.
+    TextStyle? heading(TextStyle? style) => style?.copyWith(
       fontWeight: FontWeight.w600,
+      letterSpacing: -0.25,
     );
     final text = base.textTheme;
 
     return base.copyWith(
       textTheme: text.copyWith(
-        displayLarge: brand(text.displayLarge),
-        displayMedium: brand(text.displayMedium),
-        displaySmall: brand(text.displaySmall),
-        headlineLarge: brand(text.headlineLarge),
-        headlineMedium: brand(text.headlineMedium),
-        headlineSmall: brand(text.headlineSmall),
-        titleLarge: brand(text.titleLarge),
+        displayLarge: heading(text.displayLarge),
+        displayMedium: heading(text.displayMedium),
+        displaySmall: heading(text.displaySmall),
+        headlineLarge: heading(text.headlineLarge),
+        headlineMedium: heading(text.headlineMedium),
+        headlineSmall: heading(text.headlineSmall),
+        titleLarge: text.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+      ),
+      // App bars keep the page colour while content scrolls under them.
+      appBarTheme: AppBarTheme(
+        backgroundColor: colors.surface,
+        scrolledUnderElevation: 0,
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,

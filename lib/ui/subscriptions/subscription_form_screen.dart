@@ -9,6 +9,7 @@ import 'package:loggym/data/repositories/subscription_repository.dart';
 import 'package:loggym/domain/money.dart';
 import 'package:loggym/domain/subscription_period.dart';
 import 'package:loggym/domain/unit_system.dart';
+import 'package:loggym/ui/core/text_input.dart';
 
 const _presetMonths = [1, 3, 12];
 
@@ -62,6 +63,7 @@ class _SubscriptionFormState extends ConsumerState<_SubscriptionForm> {
         ? null
         : formatNumber(_source.costCents / 100, decimals: 2),
   );
+  late final _costFocus = SelectAllFocusNode(_cost);
   late SubscriptionPeriod _period =
       widget.existing?.period ??
       widget.renewing?.period.renewedOn(DateTime.now()) ??
@@ -72,6 +74,7 @@ class _SubscriptionFormState extends ConsumerState<_SubscriptionForm> {
   void dispose() {
     _title.dispose();
     _cost.dispose();
+    _costFocus.dispose();
     super.dispose();
   }
 
@@ -215,10 +218,14 @@ class _SubscriptionFormState extends ConsumerState<_SubscriptionForm> {
                       maxLength: 120,
                       textCapitalization: TextCapitalization.sentences,
                       textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Gym',
                         hintText: 'e.g. City Gym',
                         counterText: '',
+                        suffixIcon: clearButton(
+                          _title,
+                          onChanged: (_) => _markDirty(),
+                        ),
                       ),
                       validator: (value) => (value ?? '').trim().isEmpty
                           ? 'Name the gym or subscription'
@@ -227,6 +234,7 @@ class _SubscriptionFormState extends ConsumerState<_SubscriptionForm> {
                     ),
                     TextFormField(
                       controller: _cost,
+                      focusNode: _costFocus,
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
