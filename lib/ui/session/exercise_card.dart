@@ -1,3 +1,4 @@
+import 'package:djym/data/database/app_database.dart';
 import 'package:djym/data/repositories/workout_session_repository.dart';
 import 'package:djym/domain/unit_system.dart';
 import 'package:djym/ui/exercises/exercise_avatar.dart';
@@ -13,6 +14,8 @@ class ExerciseCard extends ConsumerWidget {
     required this.sessionId,
     required this.index,
     required this.units,
+    required this.expanded,
+    required this.onToggleExpanded,
     super.key,
   });
 
@@ -20,6 +23,8 @@ class ExerciseCard extends ConsumerWidget {
   final int sessionId;
   final int index;
   final UnitSystem units;
+  final bool expanded;
+  final VoidCallback onToggleExpanded;
 
   Future<void> _remove(BuildContext context, WidgetRef ref) async {
     final repository = ref.read(workoutSessionRepositoryProvider);
@@ -47,85 +52,176 @@ class ExerciseCard extends ConsumerWidget {
         .value;
     final best = records?.allTimeBest;
     final last = records?.lastPerformance;
+    final type = exercise.trackingType;
+    final theme = Theme.of(context);
+    final completed =
+        entry.sets.isNotEmpty &&
+        entry.sets.every((set) => set.completedAt != null);
+    final animationDuration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : Durations.medium2;
 
     return Card.outlined(
       margin: const EdgeInsets.fromLTRB(12, 6, 12, 6),
       clipBehavior: Clip.antiAlias,
+      shape: completed
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: theme.colorScheme.primary),
+            )
+          : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ListTile(
-            contentPadding: const EdgeInsets.only(left: 16, right: 4),
-            leading: ExerciseAvatar(exercise),
-            title: Text(
-              exercise.title,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            subtitle: best == null
-                ? null
-                : Text(
-                    'Best: ${describeSet(best, exercise.trackingType, units)}',
-                  ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                PopupMenuButton<void>(
-                  tooltip: 'Exercise options',
-                  itemBuilder: (_) => [
-                    PopupMenuItem(
-                      onTap: () => _remove(context, ref),
-                      child: const Text('Remove from workout'),
+          Semantics(
+            expanded: expanded,
+            child: ListTile(
+              onTap: onToggleExpanded,
+              contentPadding: const EdgeInsets.only(left: 16, right: 4),
+              leading: Badge(
+                isLabelVisible: completed,
+                backgroundColor: theme.colorScheme.primary,
+                offset: const Offset(4, -4),
+                label: Icon(
+                  Icons.check,
+                  size: 12,
+                  color: theme.colorScheme.onPrimary,
+                ),
+                child: ExerciseAvatar(exercise),
+              ),
+              title: Text(
+                exercise.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleMedium,
+              ),
+              subtitle: expanded && best != null
+                  ? Text('Best: ${describeSet(best, type, units)}')
+                  : _SetProgress(entry.sets, completed: completed),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedRotation(
+                    turns: expanded ? 0.5 : 0,
+                    duration: animationDuration,
+                    curve: Easing.standard,
+                    child: Icon(
+                      Icons.expand_more,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ],
-                ),
-                ReorderableDragStartListener(
-                  index: index,
-                  child: const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Icon(Icons.drag_handle, semanticLabel: 'Reorder'),
                   ),
-                ),
-              ],
-            ),
-          ),
-          if (last != null)
-            _LastPerformanceRow(
-              summary: [
-                for (final set in last.sets)
-                  describeSet(set, exercise.trackingType, units),
-              ].join(', '),
-              date: MaterialLocalizations.of(
-                context,
-              ).formatShortMonthDay(last.date),
-              hasComments: last.sets.any((set) => set.comment != null),
-              onTap: () => showLastPerformance(
-                context,
-                exercise: exercise,
-                last: last,
-                units: units,
+                  PopupMenuButton<void>(
+                    tooltip: 'Exercise options',
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        onTap: () => _remove(context, ref),
+                        child: const Text('Remove from workout'),
+                      ),
+                    ],
+                  ),
+                  ReorderableDragStartListener(
+                    index: index,
+                    child: const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Icon(Icons.drag_handle, semanticLabel: 'Reorder'),
+                    ),
+                  ),
+                ],
               ),
             ),
-          for (final (setIndex, set) in entry.sets.indexed)
-            SetRow(
-              key: ValueKey(set.id),
-              set: set,
-              number: setIndex + 1,
-              trackingType: exercise.trackingType,
-              units: units,
-            ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-            child: TextButton.icon(
-              onPressed: () => ref
-                  .read(workoutSessionRepositoryProvider)
-                  .addSet(sessionId, exercise.id),
-              icon: const Icon(Icons.add),
-              label: const Text('Add set'),
-            ),
+          ),
+          AnimatedSize(
+            duration: animationDuration,
+            curve: Easing.standard,
+            alignment: Alignment.topCenter,
+            child: expanded
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (last != null)
+                        _LastPerformanceRow(
+                          summary: [
+                            for (final set in last.sets)
+                              describeSet(set, exercise.trackingType, units),
+                          ].join(', '),
+                          date: MaterialLocalizations.of(
+                            context,
+                          ).formatShortMonthDay(last.date),
+                          hasComments: last.sets.any(
+                            (set) => set.comment != null,
+                          ),
+                          onTap: () => showLastPerformance(
+                            context,
+                            exercise: exercise,
+                            last: last,
+                            units: units,
+                          ),
+                        ),
+                      for (final (setIndex, set) in entry.sets.indexed)
+                        SetRow(
+                          key: ValueKey(set.id),
+                          set: set,
+                          number: setIndex + 1,
+                          trackingType: exercise.trackingType,
+                          units: units,
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                        child: TextButton.icon(
+                          onPressed: () => ref
+                              .read(workoutSessionRepositoryProvider)
+                              .addSet(sessionId, exercise.id),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add set'),
+                        ),
+                      ),
+                    ],
+                  )
+                : const SizedBox(width: double.infinity),
           ),
         ],
       ),
     );
+  }
+}
+
+/// How far through its sets an exercise is, readable at a glance.
+class _SetProgress extends StatelessWidget {
+  const _SetProgress(this.sets, {required this.completed});
+
+  final List<ExerciseSet> sets;
+  final bool completed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final total = sets.length;
+    final done = sets.where((set) => set.completedAt != null).length;
+    final setCount = '$total ${total == 1 ? 'set' : 'sets'}';
+
+    if (completed) {
+      return Text.rich(
+        TextSpan(
+          children: [
+            const WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Padding(
+                padding: EdgeInsets.only(right: 4),
+                child: Icon(Icons.check_circle, size: 16),
+              ),
+            ),
+            TextSpan(text: 'Completed · $setCount'),
+          ],
+        ),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.w600,
+        ),
+      );
+    }
+
+    if (done == 0) return Text(setCount);
+    return Text('$done of $setCount done');
   }
 }
 

@@ -35,6 +35,15 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
   WorkoutSessionRepository get _repository =>
       ref.read(workoutSessionRepositoryProvider);
 
+  /// Cards start collapsed so the list stays short enough to reorder.
+  final _expandedExerciseIds = <int>{};
+
+  void _toggleExpanded(int exerciseId) => setState(() {
+    if (!_expandedExerciseIds.remove(exerciseId)) {
+      _expandedExerciseIds.add(exerciseId);
+    }
+  });
+
   @override
   void initState() {
     super.initState();
@@ -201,13 +210,18 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
                 itemCount: exercises.length,
                 onReorder: (oldIndex, newIndex) =>
                     _reorder(exercises, oldIndex, newIndex),
-                itemBuilder: (context, index) => ExerciseCard(
-                  key: ValueKey(exercises[index].exercise.id),
-                  entry: exercises[index],
-                  sessionId: widget.sessionId,
-                  index: index,
-                  units: units,
-                ),
+                itemBuilder: (context, index) {
+                  final exerciseId = exercises[index].exercise.id;
+                  return ExerciseCard(
+                    key: ValueKey(exerciseId),
+                    entry: exercises[index],
+                    sessionId: widget.sessionId,
+                    index: index,
+                    units: units,
+                    expanded: _expandedExerciseIds.contains(exerciseId),
+                    onToggleExpanded: () => _toggleExpanded(exerciseId),
+                  );
+                },
                 footer: _SessionFooter(
                   session: session,
                   onAddExercise: _addExercises,

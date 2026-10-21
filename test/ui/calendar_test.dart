@@ -132,6 +132,8 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('Add 1'));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat'));
+      await tester.pumpAndSettle();
       await tester.enterText(find.widgetWithText(TextField, 'reps'), '8');
       await tester.tap(find.text('Done'));
       await tester.pumpAndSettle();

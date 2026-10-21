@@ -69,6 +69,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> expandSquat(WidgetTester tester) async {
+    await tester.tap(find.text('Squat'));
+    await tester.pumpAndSettle();
+  }
+
   Future<void> unmountApp(WidgetTester tester) async {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(Duration.zero);
@@ -79,6 +84,7 @@ void main() {
   testWidgets('logs a set, finishes and shows the summary', (tester) async {
     await pumpApp(tester);
     await startWorkoutWithSquat(tester);
+    await expandSquat(tester);
 
     expect(screenAwake, [true]);
 
@@ -112,6 +118,7 @@ void main() {
   ) async {
     await pumpApp(tester);
     await startWorkoutWithSquat(tester);
+    await expandSquat(tester);
 
     await tester.tap(find.byTooltip('Mark set done'));
     await tester.pumpAndSettle();
@@ -138,6 +145,7 @@ void main() {
     restAlerts.notificationsEnabled = false;
     await pumpApp(tester);
     await startWorkoutWithSquat(tester);
+    await expandSquat(tester);
 
     await tester.tap(find.byTooltip('Mark set done'));
     await tester.pumpAndSettle();
@@ -164,6 +172,7 @@ void main() {
     await SettingsRepository(database).setRestSeconds(0);
     await pumpApp(tester);
     await startWorkoutWithSquat(tester);
+    await expandSquat(tester);
 
     await tester.tap(find.byTooltip('Mark set done'));
     await tester.pumpAndSettle();
@@ -189,7 +198,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Squat'), findsOneWidget);
-    expect(find.text('Add set'), findsOneWidget);
+    expect(find.text('1 set'), findsOneWidget);
 
     await unmountApp(tester);
   });
@@ -220,6 +229,7 @@ void main() {
     await SettingsRepository(database).setUnitSystem(UnitSystem.imperial);
     await pumpApp(tester);
     await startWorkoutWithSquat(tester);
+    await expandSquat(tester);
 
     await tester.enterText(field('lb'), '220.5');
     await tester.pump();
@@ -250,6 +260,7 @@ void main() {
 
     await pumpApp(tester);
     await startWorkoutWithSquat(tester);
+    await expandSquat(tester);
 
     expect(find.text('Best: 100 kg × 5'), findsOneWidget);
     final lastTime = find.textContaining('Last ·', findRichText: true);
@@ -262,6 +273,38 @@ void main() {
     expect(find.textContaining('Last time ·'), findsOneWidget);
     expect(find.text('100 kg × 5'), findsOneWidget);
     expect(find.text('Felt heavy'), findsOneWidget);
+
+    await unmountApp(tester);
+  });
+
+  testWidgets('cards start collapsed and summarise their sets', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startWorkoutWithSquat(tester);
+
+    expect(find.text('1 set'), findsOneWidget);
+    expect(find.text('Add set'), findsNothing);
+
+    await expandSquat(tester);
+    await tester.tap(find.text('Add set'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Mark set done').first);
+    await tester.pumpAndSettle();
+    await expandSquat(tester);
+
+    expect(find.text('1 of 2 sets done'), findsOneWidget);
+    expect(find.byTooltip('Mark set done'), findsNothing);
+
+    await expandSquat(tester);
+    await tester.tap(find.byTooltip('Mark set done'));
+    await tester.pumpAndSettle();
+    await expandSquat(tester);
+
+    expect(
+      find.textContaining('Completed · 2 sets', findRichText: true),
+      findsOneWidget,
+    );
 
     await unmountApp(tester);
   });

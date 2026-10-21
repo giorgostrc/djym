@@ -105,7 +105,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Bench press'), findsOneWidget);
-    expect(find.widgetWithText(TextField, 'reps'), findsNWidgets(5));
+    expect(find.text('3 sets'), findsOneWidget);
+    expect(find.text('2 sets'), findsOneWidget);
 
     await unmountApp(tester);
   });
