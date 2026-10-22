@@ -44,6 +44,29 @@ class SessionSummary {
     required this.volumeKg,
   });
 
+  /// Counts only sets with values, as a finished workout keeps no others.
+  factory SessionSummary.of(
+    WorkoutSession session,
+    List<SessionExercise> exercises,
+  ) {
+    final logged = [
+      for (final entry in exercises)
+        for (final set in entry.sets)
+          if (set.hasValues) set,
+    ];
+    final finishedAt = session.finishedAt ?? session.startedAt;
+    return SessionSummary(
+      session: session,
+      duration: finishedAt.difference(session.startedAt),
+      exerciseCount: {for (final set in logged) set.exerciseId}.length,
+      setCount: logged.length,
+      volumeKg: logged.fold(
+        0,
+        (total, set) => total + (set.weightKg ?? 0) * (set.reps ?? 0),
+      ),
+    );
+  }
+
   final WorkoutSession session;
   final Duration duration;
   final int exerciseCount;
@@ -345,38 +368,23 @@ class WorkoutSessionRepository {
         final exercises = _groupByExercise(
           await _sessionExercisesQuery(sessionId).get(),
         );
-        final logged = [
-          for (final entry in exercises)
-            for (final set in entry.sets)
-              if (set.hasValues) set,
-        ];
         await deleteSets([
           for (final entry in exercises)
             for (final set in entry.sets)
               if (!set.hasValues) set,
         ]);
 
-        final finishedAt = DateTime.now();
         final [session] =
             await (_database.update(
               _sessions,
             )..where((s) => s.id.equals(sessionId))).writeReturning(
-              WorkoutSessionsCompanion(finishedAt: Value(finishedAt)),
+              WorkoutSessionsCompanion(finishedAt: Value(DateTime.now())),
             );
         await SubscriptionRepository(
           _database,
         ).linkToLikelySubscription(session);
 
-        return SessionSummary(
-          session: session,
-          duration: finishedAt.difference(session.startedAt),
-          exerciseCount: {for (final set in logged) set.exerciseId}.length,
-          setCount: logged.length,
-          volumeKg: logged.fold(
-            0,
-            (total, set) => total + (set.weightKg ?? 0) * (set.reps ?? 0),
-          ),
-        );
+        return SessionSummary.of(session, exercises);
       });
 
   Future<void> deleteSession(int sessionId) =>
