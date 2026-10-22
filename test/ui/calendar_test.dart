@@ -7,6 +7,7 @@ import 'package:djym/data/services/wger_client.dart';
 import 'package:djym/domain/tracking_type.dart';
 import 'package:djym/ui/core/clock_provider.dart';
 import 'package:djym/ui/core/keep_screen_on.dart';
+import 'package:djym/ui/history/workout_share.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
@@ -97,6 +98,42 @@ void main() {
 
     expect(find.text('100 kg × 5'), findsOneWidget);
     expect(find.text('Belt on'), findsOneWidget);
+
+    await unmountApp(tester);
+  });
+
+  testWidgets('shares a picture of the workout without comments', (
+    tester,
+  ) async {
+    final id = await sessions.startSession();
+    await sessions.addExercises(id, [squatId]);
+    await sessions.addSet(id, squatId);
+    for (final set in await database.select(database.exerciseSets).get()) {
+      await sessions.updateSet(
+        set.id,
+        const ExerciseSetsCompanion(
+          reps: Value(5),
+          weightKg: Value(100),
+          comment: Value('Belt on'),
+        ),
+      );
+    }
+    await sessions.finishSession(id);
+    await pumpApp(tester);
+    await tester.tap(find.text('Squat'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Share workout'));
+    await tester.pumpAndSettle();
+
+    Finder onCard(String text) => find.descendant(
+      of: find.byType(WorkoutShareCard),
+      matching: find.text(text),
+    );
+    expect(onCard('100 kg × 5'), findsNWidgets(2));
+    expect(onCard('1000 kg'), findsOneWidget);
+    expect(onCard('Belt on'), findsNothing);
+    expect(find.text('Share image'), findsOneWidget);
 
     await unmountApp(tester);
   });

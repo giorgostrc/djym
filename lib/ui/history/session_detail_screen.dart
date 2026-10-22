@@ -3,6 +3,7 @@ import 'package:djym/data/repositories/workout_session_repository.dart';
 import 'package:djym/domain/unit_system.dart';
 import 'package:djym/routing/routes.dart';
 import 'package:djym/ui/exercises/exercise_avatar.dart';
+import 'package:djym/ui/history/workout_share.dart';
 import 'package:djym/ui/session/logged_set_tile.dart';
 import 'package:djym/ui/session/set_description.dart';
 import 'package:djym/ui/subscriptions/subscription_choice.dart';
@@ -61,6 +62,16 @@ class SessionDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(localizations.formatMediumDate(session.startedAt)),
         actions: [
+          IconButton(
+            tooltip: 'Share workout',
+            icon: Icon(Icons.adaptive.share),
+            onPressed: () => showWorkoutShare(
+              context,
+              session: session,
+              exercises: exercises,
+              units: units,
+            ),
+          ),
           IconButton(
             tooltip: 'Edit workout',
             icon: const Icon(Icons.edit_outlined),

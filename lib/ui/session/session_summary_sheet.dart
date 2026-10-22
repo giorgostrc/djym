@@ -3,6 +3,20 @@ import 'package:djym/domain/unit_system.dart';
 import 'package:djym/ui/subscriptions/subscription_choice.dart';
 import 'package:flutter/material.dart';
 
+/// The headline numbers of a workout as (label, value) pairs.
+List<(String, String)> summaryStats(SessionSummary summary, UnitSystem units) =>
+    [
+      ('Duration', formatDuration(summary.duration.inSeconds)),
+      ('Exercises', '${summary.exerciseCount}'),
+      ('Sets', '${summary.setCount}'),
+      if (summary.volumeKg > 0)
+        (
+          'Volume',
+          '${formatNumber(units.weightFromKg(summary.volumeKg), decimals: 0)} '
+              '${units.weightUnit}',
+        ),
+    ];
+
 class SessionSummarySheet extends StatelessWidget {
   const SessionSummarySheet({
     required this.summary,
@@ -16,17 +30,7 @@ class SessionSummarySheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final stats = [
-      ('Duration', formatDuration(summary.duration.inSeconds)),
-      ('Exercises', '${summary.exerciseCount}'),
-      ('Sets', '${summary.setCount}'),
-      if (summary.volumeKg > 0)
-        (
-          'Volume',
-          '${formatNumber(units.weightFromKg(summary.volumeKg), decimals: 0)} '
-              '${units.weightUnit}',
-        ),
-    ];
+    final stats = summaryStats(summary, units);
 
     return SafeArea(
       child: Padding(
