@@ -13,6 +13,7 @@ const _icon = 'ic_rest_timer';
 /// when the rest is over that also fires with the phone locked.
 class RestAlerts {
   final _plugin = FlutterLocalNotificationsPlugin();
+  Future<void> _pending = Future.value();
 
   AndroidFlutterLocalNotificationsPlugin? get _android => _plugin
       .resolvePlatformSpecificImplementation<
@@ -61,9 +62,17 @@ class RestAlerts {
       await _ios?.requestPermissions(alert: true, sound: true) ??
       false;
 
+  /// Changes run one at a time, so a newer rest always replaces the
+  /// notifications of the one before it.
+  Future<void> _runInOrder(Future<void> Function() change) =>
+      _pending = _pending.catchError((_) {}).then((_) => change());
+
   /// iOS has no live countdown notification, only the rest-over alert.
-  Future<void> schedule(Rest rest, {required int sessionId}) async {
-    await cancel();
+  Future<void> schedule(Rest rest, {required int sessionId}) =>
+      _runInOrder(() => _schedule(rest, sessionId: sessionId));
+
+  Future<void> _schedule(Rest rest, {required int sessionId}) async {
+    await _plugin.cancelAll();
     if (!await enabled()) return;
 
     final android = _android;
@@ -115,7 +124,7 @@ class RestAlerts {
         ),
       );
 
-  Future<void> cancel() => _plugin.cancelAll();
+  Future<void> cancel() => _runInOrder(_plugin.cancelAll);
 }
 
 final restAlertsProvider = Provider<RestAlerts>((ref) => RestAlerts());
