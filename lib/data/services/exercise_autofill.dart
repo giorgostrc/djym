@@ -65,13 +65,18 @@ Future<ExerciseDraft> draftExercise(
     throw AiException('"$title" was not recognised as an exercise');
   }
 
-  return ExerciseDraft(
-    title: json['title'] as String,
-    trackingType: TrackingType.values.byName(json['trackingType'] as String),
-    muscleNames: {
-      for (final name in (json['muscles'] as List).cast<String>())
-        if (muscleNames.contains(name)) name,
-    }.take(4).toList(),
-    formGuidance: (json['formCues'] as List).cast<String>().join('\n'),
-  );
+  // Schemas are requested, but a provider can still answer off-schema.
+  try {
+    return ExerciseDraft(
+      title: json['title'] as String,
+      trackingType: TrackingType.values.byName(json['trackingType'] as String),
+      muscleNames: {
+        for (final name in (json['muscles'] as List).cast<String>())
+          if (muscleNames.contains(name)) name,
+      }.take(4).toList(),
+      formGuidance: (json['formCues'] as List).cast<String>().join('\n'),
+    );
+  } on Object {
+    throw const AiException('The answer did not fit an exercise');
+  }
 }

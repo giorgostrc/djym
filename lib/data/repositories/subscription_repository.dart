@@ -72,14 +72,8 @@ class SubscriptionRepository {
   $WorkoutSessionsTable get _sessions => _database.workoutSessions;
 
   /// Latest start first. Reloads when workouts change, since they are counted.
-  Stream<List<SubscriptionOverview>> watchSubscriptions() async* {
-    yield await loadSubscriptions();
-    await for (final _ in _database.tableUpdates(
-      TableUpdateQuery.onAllTables([_subscriptions, _sessions]),
-    )) {
-      yield await loadSubscriptions();
-    }
-  }
+  Stream<List<SubscriptionOverview>> watchSubscriptions() =>
+      _database.reloadOnChange({_subscriptions, _sessions}, loadSubscriptions);
 
   Future<List<SubscriptionOverview>> loadSubscriptions() async {
     final count = _sessions.id.count();

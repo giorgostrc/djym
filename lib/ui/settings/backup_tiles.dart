@@ -4,6 +4,7 @@ import 'package:djym/data/database/app_database.dart';
 import 'package:djym/data/database/database_provider.dart';
 import 'package:djym/data/repositories/settings_repository.dart';
 import 'package:djym/data/services/backup_service.dart';
+import 'package:djym/data/services/error_log.dart';
 import 'package:djym/domain/subscription_period.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -50,7 +51,8 @@ class _BackupTilesState extends ConsumerState<BackupTiles> {
       if (result.status != ShareResultStatus.dismissed) {
         await ref.read(settingsRepositoryProvider).markBackedUp(DateTime.now());
       }
-    } on Exception {
+    } on Object catch (error, stack) {
+      _record(error, stack);
       if (mounted) {
         await _explain('Export failed', 'The backup could not be created.');
       }
@@ -85,7 +87,8 @@ class _BackupTilesState extends ConsumerState<BackupTiles> {
     setState(() => _running = _BackupTask.import);
     try {
       await service.restore(ref.read(appDatabaseProvider), backup);
-    } on Exception {
+    } on Object catch (error, stack) {
+      _record(error, stack);
       if (mounted) {
         await _explain(
           'Import failed',
@@ -101,6 +104,10 @@ class _BackupTilesState extends ConsumerState<BackupTiles> {
       context,
     ).showSnackBar(const SnackBar(content: Text('Backup imported')));
   }
+
+  /// The dialog tells the user; the log keeps the cause.
+  void _record(Object error, StackTrace stack) =>
+      ref.read(errorLogProvider).value?.record(error, stack);
 
   Future<void> _explain(String title, String message) => showDialog<void>(
     context: context,

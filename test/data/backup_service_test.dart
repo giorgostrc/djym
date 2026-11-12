@@ -9,6 +9,7 @@ import 'package:djym/data/services/backup_service.dart';
 import 'package:djym/domain/tracking_type.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 void main() {
   late Directory root;
@@ -88,6 +89,26 @@ void main() {
       await updates.cancel();
     },
   );
+
+  test('a backup with broken links changes nothing', () async {
+    final backup = await exportWithOneWorkout();
+    sqlite3.open(backup.path)
+      ..execute('DELETE FROM workout_sessions')
+      ..dispose();
+    final live = AppDatabase(NativeDatabase.memory());
+    addTearDown(live.close);
+    await ExerciseRepository(live).saveExercise(
+      title: 'Bench press',
+      trackingType: TrackingType.weightReps,
+      muscleIds: const [],
+    );
+
+    await expectLater(service.restore(live, backup), throwsFormatException);
+
+    final [bench] = await live.select(live.exercises).get();
+    expect(bench.title, 'Bench press');
+    expect(File('${root.path}/work/restore.sqlite').existsSync(), isFalse);
+  });
 
   test('rejects a file that is not a backup', () {
     final notBackup = File('${root.path}/notes.txt')..writeAsStringSync('hi');

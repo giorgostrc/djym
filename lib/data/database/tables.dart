@@ -86,6 +86,11 @@ class GymSubscriptions extends Table {
   TextColumn get endDate => text().map(const CalendarDayConverter())();
 }
 
+/// Date filters compare `julianday(started_at)`, so that is what is indexed.
+@TableIndex.sql(
+  'CREATE INDEX workout_sessions_started_day '
+  'ON workout_sessions (julianday(started_at))',
+)
 class WorkoutSessions extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get planId => integer().nullable().references(
@@ -105,6 +110,8 @@ class WorkoutSessions extends Table {
   TextColumn get notes => text().nullable()();
 }
 
+@TableIndex(name: 'exercise_sets_session_id', columns: {#sessionId})
+@TableIndex(name: 'exercise_sets_exercise_id', columns: {#exerciseId})
 class ExerciseSets extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get sessionId =>

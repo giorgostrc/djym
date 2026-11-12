@@ -63,4 +63,19 @@ void main() {
       throwsA(isA<AiException>()),
     );
   });
+
+  test('an answer off the schema fails as an AI error', () async {
+    final client = answering({
+      'recognized': true,
+      'title': 'Plank',
+      'trackingType': 'seconds',
+      'muscles': <String>[],
+      'formCues': <String>[],
+    });
+
+    expect(
+      () => draftExercise(client, title: 'plank', muscleNames: const []),
+      throwsA(isA<AiException>()),
+    );
+  });
 }

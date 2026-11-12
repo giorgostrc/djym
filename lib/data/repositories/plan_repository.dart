@@ -28,19 +28,12 @@ class PlanRepository {
   /// Most recently used plans first, never-used ones after them by name.
   /// Reloads whenever plans, exercises or sessions change, since starting a
   /// workout changes the order.
-  Stream<List<PlanOverview>> watchPlans() async* {
-    yield await loadPlans();
-    await for (final _ in _database.tableUpdates(
-      TableUpdateQuery.onAllTables([
-        _database.workoutPlans,
-        _database.planExercises,
-        _database.exercises,
-        _database.workoutSessions,
-      ]),
-    )) {
-      yield await loadPlans();
-    }
-  }
+  Stream<List<PlanOverview>> watchPlans() => _database.reloadOnChange({
+    _database.workoutPlans,
+    _database.planExercises,
+    _database.exercises,
+    _database.workoutSessions,
+  }, loadPlans);
 
   /// One-off read, for actions that need the plans right now.
   Future<List<PlanOverview>> loadPlans() async {

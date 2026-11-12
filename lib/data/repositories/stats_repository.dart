@@ -60,19 +60,12 @@ class StatsRepository {
 
   final AppDatabase _database;
 
-  Stream<YearStats> watchYear(int year) async* {
-    yield await loadYear(year);
-    await for (final _ in _database.tableUpdates(
-      TableUpdateQuery.onAllTables([
-        _database.workoutSessions,
-        _database.exerciseSets,
-        _database.exercises,
-        _database.gymSubscriptions,
-      ]),
-    )) {
-      yield await loadYear(year);
-    }
-  }
+  Stream<YearStats> watchYear(int year) => _database.reloadOnChange({
+    _database.workoutSessions,
+    _database.exerciseSets,
+    _database.exercises,
+    _database.gymSubscriptions,
+  }, () => loadYear(year));
 
   Future<YearStats> loadYear(int year) async {
     final sessions = _database.workoutSessions;

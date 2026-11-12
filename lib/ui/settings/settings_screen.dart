@@ -1,5 +1,6 @@
 import 'package:djym/data/repositories/settings_repository.dart';
 import 'package:djym/data/services/ai_settings_store.dart';
+import 'package:djym/data/services/error_log.dart';
 import 'package:djym/domain/theme_preference.dart';
 import 'package:djym/domain/unit_system.dart';
 import 'package:djym/routing/routes.dart';
@@ -7,6 +8,7 @@ import 'package:djym/ui/settings/backup_tiles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 const _currencies = [
   'EUR',
@@ -125,6 +127,7 @@ class SettingsScreen extends ConsumerWidget {
                 const _AiTile(),
                 const _SectionHeader('Data'),
                 BackupTiles(lastBackupAt: settings.lastBackupAt),
+                const _ErrorLogTile(),
               ],
             ),
     );
@@ -148,6 +151,39 @@ class _AiTile extends ConsumerWidget {
       ),
       trailing: const Icon(Icons.chevron_right),
       onTap: () => context.push(Routes.aiSettings),
+    );
+  }
+}
+
+/// Only there once something went wrong, so it can be sent along.
+class _ErrorLogTile extends ConsumerStatefulWidget {
+  const _ErrorLogTile();
+
+  @override
+  ConsumerState<_ErrorLogTile> createState() => _ErrorLogTileState();
+}
+
+class _ErrorLogTileState extends ConsumerState<_ErrorLogTile> {
+  @override
+  Widget build(BuildContext context) {
+    final log = ref.watch(errorLogProvider).value;
+    if (log == null || !log.hasEntries) return const SizedBox.shrink();
+
+    return ListTile(
+      leading: const Icon(Icons.bug_report_outlined),
+      title: const Text('Share error log'),
+      subtitle: const Text('Errors djym recorded, to help find bugs'),
+      trailing: IconButton(
+        tooltip: 'Clear error log',
+        icon: const Icon(Icons.delete_outline),
+        onPressed: () => setState(log.clear),
+      ),
+      onTap: () => SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(log.file.path, mimeType: 'text/plain')],
+          subject: 'djym error log',
+        ),
+      ),
     );
   }
 }

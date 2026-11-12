@@ -190,7 +190,7 @@ final exercisesProvider = StreamProvider<List<ExerciseWithMuscles>>(
 );
 
 final StreamProviderFamily<Uint8List?, int> exerciseThumbnailProvider =
-    StreamProvider.family<Uint8List?, int>(
+    StreamProvider.autoDispose.family<Uint8List?, int>(
       (ref, exerciseId) =>
           ref.watch(exerciseRepositoryProvider).watchThumbnail(exerciseId),
     );

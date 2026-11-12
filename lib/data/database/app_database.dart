@@ -41,7 +41,7 @@ const _muscleNames = [
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
-  static const currentSchemaVersion = 2;
+  static const currentSchemaVersion = 3;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -65,11 +65,31 @@ class AppDatabase extends _$AppDatabase {
           'end_date = substr(end_date, 1, 10)',
         );
       },
+      from2To3: (m, schema) async {
+        await m.create(schema.workoutSessionsStartedDay);
+        await m.create(schema.exerciseSetsSessionId);
+        await m.create(schema.exerciseSetsExerciseId);
+      },
     ),
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  /// Runs [load] now and again after every change to [tables]. A watched
+  /// query drives it, so a change made while the first load runs is never
+  /// missed. Drift shares streams of identical SQL whatever they read from,
+  /// so the table names go into the statement to keep each set apart.
+  Stream<T> reloadOnChange<T>(
+    Set<ResultSetImplementation<Table, dynamic>> tables,
+    Future<T> Function() load,
+  ) {
+    final names = [for (final table in tables) table.entityName]..sort();
+    return customSelect(
+      'SELECT 1 /* ${names.join(', ')} */',
+      readsFrom: tables,
+    ).watch().asyncMap((_) => load());
+  }
 
   Future<void> _seedMuscles() => batch(
     (batch) => batch.insertAll(
