@@ -21,15 +21,9 @@ class BackupInfo {
 
 /// A backup is a copy of the database file, photos included.
 class BackupService {
-  const BackupService({
-    required this.workDirectory,
-    required this.safetyDirectory,
-  });
+  const BackupService({required this.workDirectory});
 
   final Directory workDirectory;
-
-  /// Where the current data is copied before an import replaces it.
-  final Directory safetyDirectory;
 
   /// `VACUUM INTO` takes a consistent copy while the app keeps running.
   Future<File> export(
@@ -107,10 +101,6 @@ class BackupService {
   }
 }
 
-final backupServiceProvider = FutureProvider<BackupService>((ref) async {
-  final support = await getApplicationSupportDirectory();
-  return BackupService(
-    workDirectory: await getTemporaryDirectory(),
-    safetyDirectory: Directory('${support.path}/safety-copies'),
-  );
-});
+final backupServiceProvider = FutureProvider<BackupService>(
+  (ref) async => BackupService(workDirectory: await getTemporaryDirectory()),
+);

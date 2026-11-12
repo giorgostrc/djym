@@ -84,9 +84,7 @@ class _BackupTilesState extends ConsumerState<BackupTiles> {
 
     setState(() => _running = _BackupTask.import);
     try {
-      final database = ref.read(appDatabaseProvider);
-      await service.export(database, destination: service.safetyDirectory);
-      await service.restore(database, backup);
+      await service.restore(ref.read(appDatabaseProvider), backup);
     } on Exception {
       if (mounted) {
         await _explain(
@@ -136,7 +134,7 @@ class _BackupTilesState extends ConsumerState<BackupTiles> {
         title: const Text('Replace all data?'),
         content: Text(
           '$contents$latest.\n\nEverything on this phone will be replaced. '
-          'A safety copy of your current data is saved first.',
+          'This cannot be undone.',
         ),
         actions: [
           TextButton(

@@ -7,11 +7,11 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// Release builds are signed with the upload key described in key.properties;
-// without it they fall back to the debug key so local release builds still run.
+// Release builds must be signed with the upload key described in key.properties:
+// a build signed with any other key cannot update an installed app.
+val keystoreFile = rootProject.file("key.properties")
 val keystoreProperties = Properties().apply {
-    val file = rootProject.file("key.properties")
-    if (file.exists()) file.inputStream().use { load(it) }
+    if (keystoreFile.exists()) keystoreFile.inputStream().use { load(it) }
 }
 
 android {
@@ -48,11 +48,16 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (keystoreProperties.isEmpty) {
-                signingConfigs.getByName("debug")
-            } else {
-                signingConfigs.getByName("release")
-            }
+            signingConfig = signingConfigs.getByName("release")
+        }
+    }
+}
+
+val hasReleaseKey = !keystoreProperties.isEmpty
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    doFirst {
+        if (!hasReleaseKey) {
+            throw GradleException("Release signing key missing: create ${keystoreFile.path}")
         }
     }
 }

@@ -20,7 +20,6 @@ void main() {
     databaseFile = File('${root.path}/djym.sqlite');
     service = BackupService(
       workDirectory: Directory('${root.path}/work')..createSync(),
-      safetyDirectory: Directory('${root.path}/safety'),
     );
   });
 
