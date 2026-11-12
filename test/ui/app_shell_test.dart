@@ -2,9 +2,10 @@ import 'package:djym/app.dart';
 import 'package:djym/data/database/app_database.dart';
 import 'package:djym/data/database/database_provider.dart';
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../helpers/test_widgets_then_unmount.dart';
 
 void main() {
   late AppDatabase database;
@@ -25,12 +26,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> unmountApp(WidgetTester tester) async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(Duration.zero);
-  }
-
-  testWidgets('opens on the calendar and navigates between tabs', (
+  testWidgetsThenUnmount('opens on the calendar and navigates between tabs', (
     tester,
   ) async {
     await pumpApp(tester);
@@ -47,7 +43,5 @@ void main() {
     await tester.tap(find.text('Settings').last);
     await tester.pumpAndSettle();
     expect(find.text('Theme'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 }

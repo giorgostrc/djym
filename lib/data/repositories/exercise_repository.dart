@@ -55,15 +55,12 @@ class ExerciseRepository {
     });
   }
 
-  /// Saving with the wger id of an archived exercise brings that exercise
-  /// back instead of creating a duplicate. A null [thumbnail] removes the
-  /// photo.
+  /// A null [thumbnail] removes the photo.
   Future<int> saveExercise({
     required String title,
     required TrackingType trackingType,
     required List<int> muscleIds,
     String? formGuidance,
-    String? externalId,
     Uint8List? thumbnail,
     int? id,
   }) => _database.transaction(() async {
@@ -72,18 +69,10 @@ class ExerciseRepository {
       title: Value(title),
       trackingType: Value(trackingType),
       formGuidance: Value(formGuidance),
-      externalId: Value.absentIfNull(externalId),
-      archivedAt: const Value(null),
     );
     final saved = await _database
         .into(_database.exercises)
-        .insertReturning(
-          row,
-          onConflict: UpsertMultiple([
-            DoUpdate((_) => row),
-            DoUpdate((_) => row, target: [_database.exercises.externalId]),
-          ]),
-        );
+        .insertReturning(row, onConflict: DoUpdate((_) => row));
     await _replaceMuscles(saved.id, muscleIds);
     await _writeThumbnail(saved.id, thumbnail);
     return saved.id;

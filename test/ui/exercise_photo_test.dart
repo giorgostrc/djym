@@ -16,6 +16,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../helpers/test_widgets_then_unmount.dart';
+
 class _FakeImagePicker implements ImagePicker {
   ImageSource? requestedSource;
 
@@ -81,36 +83,31 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> unmountApp(WidgetTester tester) async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(Duration.zero);
-  }
+  testWidgetsThenUnmount(
+    'replaces a prefilled wger photo with one from the camera',
+    (
+      tester,
+    ) async {
+      await openExercisesTab(tester);
+      await tester.tap(find.text('Create your first exercise'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextFormField).first, 'bench');
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bench Press'));
+      await tester.pumpAndSettle();
 
-  testWidgets('replaces a prefilled wger photo with one from the camera', (
-    tester,
-  ) async {
-    await openExercisesTab(tester);
-    await tester.tap(find.text('Create your first exercise'));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField).first, 'bench');
-    await tester.pump(const Duration(milliseconds: 500));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Bench Press'));
-    await tester.pumpAndSettle();
+      await choosePhotoOption(tester, 'Take photo');
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
 
-    await choosePhotoOption(tester, 'Take photo');
-    await tester.tap(find.text('Save'));
-    await tester.pumpAndSettle();
+      final saved = await database.select(database.exercises).getSingle();
+      expect(picker.requestedSource, ImageSource.camera);
+      expect(await ExerciseRepository(database).thumbnail(saved.id), [7, 7, 7]);
+    },
+  );
 
-    final saved = await database.select(database.exercises).getSingle();
-    expect(picker.requestedSource, ImageSource.camera);
-    expect(saved.externalId, startsWith('wger:'));
-    expect(await ExerciseRepository(database).thumbnail(saved.id), [7, 7, 7]);
-
-    await unmountApp(tester);
-  });
-
-  testWidgets('removes the photo of an existing exercise', (
+  testWidgetsThenUnmount('removes the photo of an existing exercise', (
     tester,
   ) async {
     await ExerciseRepository(database).saveExercise(
@@ -131,23 +128,22 @@ void main() {
 
     final saved = await database.select(database.exercises).getSingle();
     expect(await ExerciseRepository(database).thumbnail(saved.id), isNull);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('a new exercise without a photo offers no remove option', (
-    tester,
-  ) async {
-    await openExercisesTab(tester);
-    await tester.tap(find.text('Create your first exercise'));
-    await tester.pumpAndSettle();
+  testWidgetsThenUnmount(
+    'a new exercise without a photo offers no remove option',
+    (
+      tester,
+    ) async {
+      await openExercisesTab(tester);
+      await tester.tap(find.text('Create your first exercise'));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Change photo'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Change photo'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Choose from gallery'), findsOneWidget);
-    expect(find.text('Remove photo'), findsNothing);
-
-    await unmountApp(tester);
-  });
+      expect(find.text('Choose from gallery'), findsOneWidget);
+      expect(find.text('Remove photo'), findsNothing);
+    },
+  );
 }

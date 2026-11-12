@@ -6,11 +6,22 @@ import 'package:djym/domain/tracking_type.dart';
 import 'package:djym/domain/unit_system.dart';
 import 'package:drift/drift.dart';
 
+/// A calendar day as `yyyy-mm-dd`, read back as local midnight, so it is the
+/// same day in every time zone.
+class CalendarDayConverter extends TypeConverter<DateTime, String> {
+  const CalendarDayConverter();
+
+  @override
+  DateTime fromSql(String fromDb) => DateTime.parse(fromDb);
+
+  @override
+  String toSql(DateTime value) => value.toIso8601String().substring(0, 10);
+}
+
 class Exercises extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get title => text().withLength(min: 1, max: 120)();
   TextColumn get formGuidance => text().nullable()();
-  TextColumn get externalId => text().nullable().unique()();
   TextColumn get trackingType => textEnum<TrackingType>().withDefault(
     Constant(TrackingType.weightReps.name),
   )();
@@ -71,8 +82,8 @@ class GymSubscriptions extends Table {
   TextColumn get title => text().withLength(min: 1, max: 120)();
   IntColumn get costCents =>
       integer().check(costCents.isBiggerOrEqualValue(0))();
-  DateTimeColumn get startDate => dateTime()();
-  DateTimeColumn get endDate => dateTime()();
+  TextColumn get startDate => text().map(const CalendarDayConverter())();
+  TextColumn get endDate => text().map(const CalendarDayConverter())();
 }
 
 class WorkoutSessions extends Table {

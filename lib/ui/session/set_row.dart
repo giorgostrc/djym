@@ -101,23 +101,21 @@ class _SetRowState extends ConsumerState<SetRow> {
     controller: _weight,
     label: widget.units.weightUnit,
     decimal: true,
-    onChanged: (text) {
-      final weight = parseDecimal(text);
-      return _write(
-        ExerciseSetsCompanion(
-          weightKg: Value(
-            weight == null ? null : widget.units.weightToKg(weight),
-          ),
+    parse: parseDecimal,
+    onValue: (weight) => _write(
+      ExerciseSetsCompanion(
+        weightKg: Value(
+          weight == null ? null : widget.units.weightToKg(weight),
         ),
-      );
-    },
+      ),
+    ),
   );
 
   Widget _repsField() => _NumberField(
     controller: _reps,
     label: 'reps',
-    onChanged: (text) =>
-        _write(ExerciseSetsCompanion(reps: Value(int.tryParse(text)))),
+    parse: int.tryParse,
+    onValue: (reps) => _write(ExerciseSetsCompanion(reps: Value(reps))),
   );
 
   Widget _durationField() => _NumberField(
@@ -125,25 +123,23 @@ class _SetRowState extends ConsumerState<SetRow> {
     label: 'time',
     hint: 'm:ss',
     allowColon: true,
-    onChanged: (text) => _write(
-      ExerciseSetsCompanion(durationSeconds: Value(parseDuration(text))),
-    ),
+    parse: parseDuration,
+    onValue: (seconds) =>
+        _write(ExerciseSetsCompanion(durationSeconds: Value(seconds))),
   );
 
   Widget _distanceField() => _NumberField(
     controller: _distance,
     label: widget.units.distanceUnit,
     decimal: true,
-    onChanged: (text) {
-      final distance = parseDecimal(text);
-      return _write(
-        ExerciseSetsCompanion(
-          distanceMeters: Value(
-            distance == null ? null : widget.units.distanceToMetres(distance),
-          ),
+    parse: parseDecimal,
+    onValue: (distance) => _write(
+      ExerciseSetsCompanion(
+        distanceMeters: Value(
+          distance == null ? null : widget.units.distanceToMetres(distance),
         ),
-      );
-    },
+      ),
+    ),
   );
 
   @override
@@ -240,11 +236,14 @@ class _SetRowState extends ConsumerState<SetRow> {
   }
 }
 
-class _NumberField extends StatefulWidget {
+/// Writes [onValue] with the parsed text, or null once emptied. Text that
+/// cannot be read is marked and not written, so the last value stays.
+class _NumberField<T extends Object> extends StatefulWidget {
   const _NumberField({
     required this.controller,
     required this.label,
-    required this.onChanged,
+    required this.parse,
+    required this.onValue,
     this.hint,
     this.decimal = false,
     this.allowColon = false,
@@ -255,14 +254,24 @@ class _NumberField extends StatefulWidget {
   final String? hint;
   final bool decimal;
   final bool allowColon;
-  final Future<void> Function(String) onChanged;
+  final T? Function(String) parse;
+  final Future<void> Function(T?) onValue;
 
   @override
-  State<_NumberField> createState() => _NumberFieldState();
+  State<_NumberField<T>> createState() => _NumberFieldState<T>();
 }
 
-class _NumberFieldState extends State<_NumberField> {
+class _NumberFieldState<T extends Object> extends State<_NumberField<T>> {
   late final _focusNode = SelectAllFocusNode(widget.controller);
+  var _unreadable = false;
+
+  Future<void> _changed(String text) async {
+    final empty = text.trim().isEmpty;
+    final value = empty ? null : widget.parse(text);
+    setState(() => _unreadable = !empty && value == null);
+    if (_unreadable) return;
+    await widget.onValue(value);
+  }
 
   @override
   void dispose() {
@@ -294,8 +303,9 @@ class _NumberFieldState extends State<_NumberField> {
         labelText: widget.label,
         hintText: widget.hint,
         border: const OutlineInputBorder(),
+        error: _unreadable ? const SizedBox.shrink() : null,
       ),
-      onChanged: widget.onChanged,
+      onChanged: _changed,
     );
   }
 }

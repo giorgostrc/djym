@@ -14,6 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
+import '../helpers/test_widgets_then_unmount.dart';
+
 void main() {
   late AppDatabase database;
 
@@ -54,11 +56,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> unmountApp(WidgetTester tester) async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(Duration.zero);
-  }
-
   Future<void> typeNewExercise(WidgetTester tester, String title) async {
     await tester.tap(find.text('Exercises'));
     await tester.pumpAndSettle();
@@ -68,17 +65,17 @@ void main() {
     await tester.pumpAndSettle(const Duration(milliseconds: 500));
   }
 
-  testWidgets('without a key the form offers no AI', (tester) async {
+  testWidgetsThenUnmount('without a key the form offers no AI', (tester) async {
     FlutterSecureStorage.setMockInitialValues({});
     await pumpApp(tester, ai: (_) async => http.Response('', 500));
     await typeNewExercise(tester, 'Bulgarian split squat');
 
     expect(find.text('Fill with AI'), findsNothing);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('fills the exercise form and clear undoes it', (tester) async {
+  testWidgetsThenUnmount('fills the exercise form and clear undoes it', (
+    tester,
+  ) async {
     storeKey();
     await pumpApp(
       tester,
@@ -116,11 +113,9 @@ void main() {
 
     expect(find.text('bulgarian split sqaut'), findsOneWidget);
     expect(find.text('Keep the torso upright'), findsNothing);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('a failed fill explains why', (tester) async {
+  testWidgetsThenUnmount('a failed fill explains why', (tester) async {
     storeKey();
     await pumpApp(tester, ai: (_) async => http.Response('{}', 401));
     await typeNewExercise(tester, 'Squat');
@@ -129,11 +124,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Anthropic did not accept the API key'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('saving a key checks it with the provider first', (
+  testWidgetsThenUnmount('saving a key checks it with the provider first', (
     tester,
   ) async {
     FlutterSecureStorage.setMockInitialValues({});
@@ -160,7 +153,5 @@ void main() {
 
     expect(find.text('AI features are on'), findsOneWidget);
     expect(find.text('OpenAI · gpt-6-luna · key ending 9876'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 }

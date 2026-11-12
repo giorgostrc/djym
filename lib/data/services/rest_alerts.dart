@@ -1,5 +1,6 @@
 import 'package:djym/domain/rest.dart';
 import 'package:djym/ui/core/brand_colors.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -78,28 +79,39 @@ class RestAlerts {
     final android = _android;
     if (android != null) await _showCountdown(rest, sessionId: sessionId);
     final exact = await android?.canScheduleExactNotifications() ?? false;
-    await _plugin.zonedSchedule(
-      id: _restOverId,
-      title: 'Rest is over',
-      body: 'Time for your next set',
-      payload: '$sessionId',
-      scheduledDate: tz.TZDateTime.from(rest.endsAt, tz.UTC),
-      androidScheduleMode: exact
-          ? AndroidScheduleMode.exactAllowWhileIdle
-          : AndroidScheduleMode.inexactAllowWhileIdle,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'rest_over',
-          'Rest over',
-          channelDescription: 'Alerts you when it is time for the next set',
-          color: BrandColors.deepTeal,
-          importance: Importance.max,
-          priority: Priority.high,
-          category: AndroidNotificationCategory.alarm,
-        ),
-      ),
-    );
+    if (!rest.endsAt.isAfter(DateTime.now())) return;
+    try {
+      await _scheduleRestOver(rest, sessionId: sessionId, exact: exact);
+    } on PlatformException {
+      // Alerts are best effort; the in-app timer keeps running without one.
+    }
   }
+
+  Future<void> _scheduleRestOver(
+    Rest rest, {
+    required int sessionId,
+    required bool exact,
+  }) => _plugin.zonedSchedule(
+    id: _restOverId,
+    title: 'Rest is over',
+    body: 'Time for your next set',
+    payload: '$sessionId',
+    scheduledDate: tz.TZDateTime.from(rest.endsAt, tz.UTC),
+    androidScheduleMode: exact
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexactAllowWhileIdle,
+    notificationDetails: const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'rest_over',
+        'Rest over',
+        channelDescription: 'Alerts you when it is time for the next set',
+        color: BrandColors.deepTeal,
+        importance: Importance.max,
+        priority: Priority.high,
+        category: AndroidNotificationCategory.alarm,
+      ),
+    ),
+  );
 
   Future<void> _showCountdown(Rest rest, {required int sessionId}) =>
       _plugin.show(

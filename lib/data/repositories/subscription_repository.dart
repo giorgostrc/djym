@@ -153,7 +153,7 @@ class SubscriptionRepository {
     required int costCents,
     required SubscriptionPeriod period,
     int? id,
-  }) async {
+  }) => _database.transaction(() async {
     final row = GymSubscriptionsCompanion(
       id: Value.absentIfNull(id),
       title: Value(title),
@@ -162,14 +162,31 @@ class SubscriptionRepository {
       endDate: Value(period.end),
     );
     final insertedId = await _subscriptions.insertOnConflictUpdate(row);
-    if (id != null) return id;
+    final subscriptionId = id ?? insertedId;
 
-    await _linkUnassignedSessionsTo(insertedId);
-    return insertedId;
+    await _relinkSessionsOutside(subscriptionId, period);
+    await _linkUnassignedSessionsTo(subscriptionId);
+    return subscriptionId;
+  });
+
+  /// Workouts an edited period no longer covers move to whichever
+  /// subscription covers them now, if any.
+  Future<void> _relinkSessionsOutside(
+    int subscriptionId,
+    SubscriptionPeriod period,
+  ) async {
+    final linked = await (_database.select(
+      _sessions,
+    )..where((row) => row.subscriptionId.equals(subscriptionId))).get();
+    for (final session in linked) {
+      if (period.contains(session.startedAt)) continue;
+      await linkSession(session.id, null);
+      await linkToLikelySubscription(session);
+    }
   }
 
-  /// A subscription added after the fact picks up the workouts it alone
-  /// covers.
+  /// A subscription added or moved after the fact picks up the workouts it
+  /// alone covers.
   Future<void> _linkUnassignedSessionsTo(int subscriptionId) async {
     final unassigned =
         await (_database.select(_sessions)..where(

@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/test_widgets_then_unmount.dart';
+
 void main() {
   late AppDatabase database;
   late int squat;
@@ -52,12 +54,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> unmountApp(WidgetTester tester) async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(Duration.zero);
-  }
-
-  testWidgets('shows the best set, records and history', (tester) async {
+  testWidgetsThenUnmount('shows the best set, records and history', (
+    tester,
+  ) async {
     await logSquat(DateTime(2026, 9, 2), 80);
     await logSquat(DateTime(2026, 9, 8), 100);
     await openSquat(tester);
@@ -71,21 +70,51 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byTooltip('Edit workout'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('an exercise never done explains what will show up', (
+  testWidgetsThenUnmount('an exercise never done explains what will show up', (
     tester,
   ) async {
     await openSquat(tester);
 
     expect(find.textContaining('after your first workout'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('edit and delete live in the app bar', (tester) async {
+  testWidgetsThenUnmount(
+    'changing the tracking of an exercise with history asks first',
+    (
+      tester,
+    ) async {
+      await logSquat(DateTime(2026, 9, 2), 80);
+      await openSquat(tester);
+      await tester.tap(find.byTooltip('Edit exercise'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Reps'));
+      await tester.pumpAndSettle();
+      expect(find.text('Change tracking?'), findsOneWidget);
+
+      await tester.tap(find.text('Keep it'));
+      await tester.pumpAndSettle();
+      ChoiceChip chip(String label) => tester.widget<ChoiceChip>(
+        find.ancestor(of: find.text(label), matching: find.byType(ChoiceChip)),
+      );
+      expect(chip('Weight × reps').selected, isTrue);
+
+      await tester.tap(find.text('Reps'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Change'));
+      await tester.pumpAndSettle();
+      expect(chip('Reps').selected, isTrue);
+
+      await tester.tap(find.text('Time'));
+      await tester.pumpAndSettle();
+      expect(find.text('Change tracking?'), findsNothing);
+      expect(chip('Time').selected, isTrue);
+    },
+  );
+
+  testWidgetsThenUnmount('edit and delete live in the app bar', (tester) async {
     await openSquat(tester);
 
     await tester.tap(find.byTooltip('Edit exercise'));
@@ -102,7 +131,5 @@ void main() {
 
     expect(find.text('Squat deleted'), findsOneWidget);
     expect(find.text('No exercises yet'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 }

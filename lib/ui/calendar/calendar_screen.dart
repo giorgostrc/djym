@@ -57,8 +57,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final selectedDay = ref.watch(selectedDayProvider);
     final sessions =
         ref.watch(sessionsInMonthProvider(_focusedMonth)).value ?? const [];
+    final selectedMonth = DateTime(selectedDay.year, selectedDay.month);
+    final selectedMonthSessions =
+        ref.watch(sessionsInMonthProvider(selectedMonth)).value ?? const [];
     final daySessions = [
-      for (final overview in sessions)
+      for (final overview in selectedMonthSessions)
         if (isSameDay(overview.session.startedAt, selectedDay)) overview,
     ];
     final hasActiveSession = ref.watch(activeSessionProvider).value != null;

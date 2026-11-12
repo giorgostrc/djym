@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:djym/app.dart';
 import 'package:djym/data/database/app_database.dart';
 import 'package:djym/data/database/database_provider.dart';
@@ -8,6 +10,8 @@ import 'package:djym/data/services/rest_alerts.dart';
 import 'package:djym/data/services/wger_client.dart';
 import 'package:djym/domain/tracking_type.dart';
 import 'package:djym/domain/unit_system.dart';
+import 'package:djym/routing/router.dart';
+import 'package:djym/routing/routes.dart';
 import 'package:djym/ui/core/clock_provider.dart';
 import 'package:djym/ui/core/keep_screen_on.dart';
 import 'package:drift/drift.dart' show Value;
@@ -19,6 +23,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 import '../fakes/fake_rest_alerts.dart';
+import '../helpers/test_widgets_then_unmount.dart';
 
 void main() {
   late AppDatabase database;
@@ -74,14 +79,11 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> unmountApp(WidgetTester tester) async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(Duration.zero);
-  }
-
   Finder field(String label) => find.widgetWithText(TextField, label);
 
-  testWidgets('logs a set, finishes and shows the summary', (tester) async {
+  testWidgetsThenUnmount('logs a set, finishes and shows the summary', (
+    tester,
+  ) async {
     await pumpApp(tester);
     await startWorkoutWithSquat(tester);
     await expandSquat(tester);
@@ -109,11 +111,9 @@ void main() {
     expect(sets.single.completedAt, isNotNull);
     expect(find.text('Start workout'), findsOneWidget);
     expect(screenAwake, [true, false]);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('a done set starts the rest, which can be adjusted', (
+  testWidgetsThenUnmount('a done set starts the rest, which can be adjusted', (
     tester,
   ) async {
     await pumpApp(tester);
@@ -137,11 +137,11 @@ void main() {
 
     expect(find.text('Skip'), findsNothing);
     expect(restAlerts.cancelled, isTrue);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('the first rest asks once before alerting', (tester) async {
+  testWidgetsThenUnmount('the first rest asks once before alerting', (
+    tester,
+  ) async {
     restAlerts.notificationsEnabled = false;
     await pumpApp(tester);
     await startWorkoutWithSquat(tester);
@@ -164,11 +164,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Alert when rest is over?'), findsNothing);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('no rest starts when the rest timer is off', (tester) async {
+  testWidgetsThenUnmount('no rest starts when the rest timer is off', (
+    tester,
+  ) async {
     await SettingsRepository(database).setRestSeconds(0);
     await pumpApp(tester);
     await startWorkoutWithSquat(tester);
@@ -179,11 +179,11 @@ void main() {
 
     expect(find.text('Skip'), findsNothing);
     expect(restAlerts.scheduled, isEmpty);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('the banner brings back a workout left running', (tester) async {
+  testWidgetsThenUnmount('the banner brings back a workout left running', (
+    tester,
+  ) async {
     await pumpApp(tester);
     await startWorkoutWithSquat(tester);
 
@@ -199,11 +199,9 @@ void main() {
 
     expect(find.text('Squat'), findsOneWidget);
     expect(find.text('1 set'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('finishing with nothing logged offers to discard', (
+  testWidgetsThenUnmount('finishing with nothing logged offers to discard', (
     tester,
   ) async {
     await pumpApp(tester);
@@ -219,11 +217,9 @@ void main() {
 
     expect(await database.select(database.workoutSessions).get(), isEmpty);
     expect(find.text('Start workout'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('weights typed in pounds are stored in kilograms', (
+  testWidgetsThenUnmount('weights typed in pounds are stored in kilograms', (
     tester,
   ) async {
     await SettingsRepository(database).setUnitSystem(UnitSystem.imperial);
@@ -236,48 +232,47 @@ void main() {
 
     final set = await database.select(database.exerciseSets).getSingle();
     expect(set.weightKg, closeTo(100, 0.02));
-
-    await unmountApp(tester);
   });
 
-  testWidgets('shows the best set and every set of last time with comments', (
-    tester,
-  ) async {
-    final sessions = WorkoutSessionRepository(database);
-    final squat = await database.select(database.exercises).getSingle();
-    final previous = await sessions.startSession();
-    await sessions.addExercises(previous, [squat.id]);
-    final set = await database.select(database.exerciseSets).getSingle();
-    await sessions.updateSet(
-      set.id,
-      const ExerciseSetsCompanion(
-        reps: Value(5),
-        weightKg: Value(100),
-        comment: Value('Felt heavy'),
-      ),
-    );
-    await sessions.finishSession(previous);
+  testWidgetsThenUnmount(
+    'shows the best set and every set of last time with comments',
+    (
+      tester,
+    ) async {
+      final sessions = WorkoutSessionRepository(database);
+      final squat = await database.select(database.exercises).getSingle();
+      final previous = await sessions.startSession();
+      await sessions.addExercises(previous, [squat.id]);
+      final set = await database.select(database.exerciseSets).getSingle();
+      await sessions.updateSet(
+        set.id,
+        const ExerciseSetsCompanion(
+          reps: Value(5),
+          weightKg: Value(100),
+          comment: Value('Felt heavy'),
+        ),
+      );
+      await sessions.finishSession(previous);
 
-    await pumpApp(tester);
-    await startWorkoutWithSquat(tester);
-    await expandSquat(tester);
+      await pumpApp(tester);
+      await startWorkoutWithSquat(tester);
+      await expandSquat(tester);
 
-    expect(find.text('Best: 100 kg × 5'), findsOneWidget);
-    final lastTime = find.textContaining('Last ·', findRichText: true);
-    expect(lastTime, findsOneWidget);
-    expect(find.byIcon(Icons.mode_comment_outlined), findsOneWidget);
+      expect(find.text('Best: 100 kg × 5'), findsOneWidget);
+      final lastTime = find.textContaining('Last ·', findRichText: true);
+      expect(lastTime, findsOneWidget);
+      expect(find.byIcon(Icons.mode_comment_outlined), findsOneWidget);
 
-    await tester.tap(lastTime);
-    await tester.pumpAndSettle();
+      await tester.tap(lastTime);
+      await tester.pumpAndSettle();
 
-    expect(find.textContaining('Last time ·'), findsOneWidget);
-    expect(find.text('100 kg × 5'), findsOneWidget);
-    expect(find.text('Felt heavy'), findsOneWidget);
+      expect(find.textContaining('Last time ·'), findsOneWidget);
+      expect(find.text('100 kg × 5'), findsOneWidget);
+      expect(find.text('Felt heavy'), findsOneWidget);
+    },
+  );
 
-    await unmountApp(tester);
-  });
-
-  testWidgets('cards start collapsed and summarise their sets', (
+  testWidgetsThenUnmount('cards start collapsed and summarise their sets', (
     tester,
   ) async {
     await pumpApp(tester);
@@ -305,7 +300,88 @@ void main() {
       find.textContaining('Completed · 2 sets', findRichText: true),
       findsOneWidget,
     );
+  });
 
-    await unmountApp(tester);
+  testWidgetsThenUnmount(
+    'unreadable input is marked and keeps the last value',
+    (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await startWorkoutWithSquat(tester);
+      await expandSquat(tester);
+
+      await tester.enterText(field('kg'), '1.2');
+      await tester.enterText(field('kg'), '1.2.3');
+      await tester.pumpAndSettle();
+
+      final weightField = tester.widget<TextField>(field('kg'));
+      expect(weightField.decoration?.error, isNotNull);
+      final set = await database.select(database.exerciseSets).getSingle();
+      expect(set.weightKg, 1.2);
+    },
+  );
+
+  testWidgetsThenUnmount(
+    'a workout left running for hours offers to end at the last '
+    'ticked set',
+    (tester) async {
+      final squat = await database.select(database.exercises).getSingle();
+      final startedAt = DateTime.now().subtract(const Duration(hours: 6));
+      final tickedAt = startedAt.add(const Duration(minutes: 50));
+      final sessionId = await database
+          .into(database.workoutSessions)
+          .insert(WorkoutSessionsCompanion.insert(startedAt: startedAt));
+      await database
+          .into(database.exerciseSets)
+          .insert(
+            ExerciseSetsCompanion.insert(
+              sessionId: sessionId,
+              exerciseId: squat.id,
+              position: 0,
+              reps: const Value(5),
+              completedAt: Value(tickedAt),
+            ),
+          );
+      await pumpApp(tester);
+
+      await tester.tap(find.textContaining('Workout in progress'));
+      await tester.pumpAndSettle();
+      expect(find.text('Still working out?'), findsOneWidget);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Finish'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Workout complete'), findsOneWidget);
+      expect(find.text('50:00'), findsWidgets);
+      final session = await database
+          .select(database.workoutSessions)
+          .getSingle();
+      expect(session.finishedAt, tickedAt);
+    },
+  );
+
+  testWidgetsThenUnmount('a workout that no longer exists can be left', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(DjymApp)),
+    );
+    unawaited(container.read(routerProvider).push(Routes.session(999)));
+    await tester.pumpAndSettle();
+
+    expect(find.text('This workout no longer exists'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Start workout'), findsOneWidget);
   });
 }

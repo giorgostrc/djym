@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../fakes/fake_rest_alerts.dart';
+import '../helpers/test_widgets_then_unmount.dart';
 
 void main() {
   late AppDatabase database;
@@ -41,11 +42,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> unmountApp(WidgetTester tester) async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(Duration.zero);
-  }
-
   DateTime daysFromToday(int days) {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day + days);
@@ -54,7 +50,7 @@ void main() {
   Future<List<GymSubscription>> savedSubscriptions() =>
       database.select(database.gymSubscriptions).get();
 
-  testWidgets('the first subscription is added from the calendar', (
+  testWidgetsThenUnmount('the first subscription is added from the calendar', (
     tester,
   ) async {
     await pumpApp(tester);
@@ -76,11 +72,11 @@ void main() {
       SubscriptionPeriod(saved.startDate, saved.endDate).wholeMonths,
       1,
     );
-
-    await unmountApp(tester);
   });
 
-  testWidgets('a subscription about to end can be renewed', (tester) async {
+  testWidgetsThenUnmount('a subscription about to end can be renewed', (
+    tester,
+  ) async {
     await SubscriptionRepository(database).saveSubscription(
       title: 'City',
       costCents: 6000,
@@ -106,11 +102,11 @@ void main() {
       SubscriptionPeriod(renewal.startDate, renewal.endDate).lengthInDays,
       14,
     );
-
-    await unmountApp(tester);
   });
 
-  testWidgets('a deleted subscription comes back on undo', (tester) async {
+  testWidgetsThenUnmount('a deleted subscription comes back on undo', (
+    tester,
+  ) async {
     await SubscriptionRepository(database).saveSubscription(
       title: 'City',
       costCents: 6000,
@@ -137,51 +133,50 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Current'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('finishing while two subscriptions run asks which one counts', (
-    tester,
-  ) async {
-    final repository = SubscriptionRepository(database);
-    for (final title in ['Gym', 'Yoga']) {
-      await repository.saveSubscription(
-        title: title,
-        costCents: 6000,
-        period: SubscriptionPeriod.months(daysFromToday(-3), 1),
+  testWidgetsThenUnmount(
+    'finishing while two subscriptions run asks which one counts',
+    (
+      tester,
+    ) async {
+      final repository = SubscriptionRepository(database);
+      for (final title in ['Gym', 'Yoga']) {
+        await repository.saveSubscription(
+          title: title,
+          costCents: 6000,
+          period: SubscriptionPeriod.months(daysFromToday(-3), 1),
+        );
+      }
+      final squat = await ExerciseRepository(database).saveExercise(
+        title: 'Squat',
+        trackingType: TrackingType.weightReps,
+        muscleIds: const [],
       );
-    }
-    final squat = await ExerciseRepository(database).saveExercise(
-      title: 'Squat',
-      trackingType: TrackingType.weightReps,
-      muscleIds: const [],
-    );
-    final sessions = WorkoutSessionRepository(database);
-    final sessionId = await sessions.startSession();
-    await sessions.addExercises(sessionId, [squat]);
-    await database
-        .update(database.exerciseSets)
-        .write(const ExerciseSetsCompanion(reps: Value(5)));
-    await pumpApp(tester);
+      final sessions = WorkoutSessionRepository(database);
+      final sessionId = await sessions.startSession();
+      await sessions.addExercises(sessionId, [squat]);
+      await database
+          .update(database.exerciseSets)
+          .write(const ExerciseSetsCompanion(reps: Value(5)));
+      await pumpApp(tester);
 
-    await tester.tap(find.textContaining('Workout in progress'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Finish'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('Workout in progress'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Finish'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Counts towards'), findsOneWidget);
+      expect(find.text('Counts towards'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Yoga'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Done'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Yoga'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Done'));
+      await tester.pumpAndSettle();
 
-    final [yoga, gym] = await repository.loadSubscriptions();
-    expect(yoga.subscription.title, 'Yoga');
-    expect(yoga.sessionCount, 1);
-    expect(gym.sessionCount, 0);
-
-    await unmountApp(tester);
-  });
+      final [yoga, gym] = await repository.loadSubscriptions();
+      expect(yoga.subscription.title, 'Yoga');
+      expect(yoga.sessionCount, 1);
+      expect(gym.sessionCount, 0);
+    },
+  );
 }

@@ -16,6 +16,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
+import '../helpers/test_widgets_then_unmount.dart';
+
 void main() {
   late AppDatabase database;
   late WorkoutSessionRepository sessions;
@@ -54,11 +56,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> unmountApp(WidgetTester tester) async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(Duration.zero);
-  }
-
   Future<void> logFinishedSquat() async {
     final id = await sessions.startSession();
     await sessions.addExercises(id, [squatId]);
@@ -74,7 +71,7 @@ void main() {
     await sessions.finishSession(id);
   }
 
-  testWidgets('opens on today with a way to start a workout', (
+  testWidgetsThenUnmount('opens on today with a way to start a workout', (
     tester,
   ) async {
     await pumpApp(tester);
@@ -82,11 +79,11 @@ void main() {
     expect(find.text('Today'), findsOneWidget);
     expect(find.text('No workouts'), findsOneWidget);
     expect(find.text('Start workout'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets("lists today's workout and opens its details", (tester) async {
+  testWidgetsThenUnmount("lists today's workout and opens its details", (
+    tester,
+  ) async {
     await logFinishedSquat();
     await pumpApp(tester);
 
@@ -98,11 +95,25 @@ void main() {
 
     expect(find.text('100 kg × 5'), findsOneWidget);
     expect(find.text('Belt on'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('shares a picture of the workout without comments', (
+  testWidgetsThenUnmount(
+    "keeps listing the selected day's workout on another month",
+    (
+      tester,
+    ) async {
+      await logFinishedSquat();
+      await pumpApp(tester);
+
+      await tester.drag(find.byType(PageView), const Offset(-600, 0));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Today'), findsOneWidget);
+      expect(find.text('Squat'), findsOneWidget);
+    },
+  );
+
+  testWidgetsThenUnmount('shares a picture of the workout without comments', (
     tester,
   ) async {
     final id = await sessions.startSession();
@@ -134,11 +145,11 @@ void main() {
     expect(onCard('1000 kg'), findsOneWidget);
     expect(onCard('Belt on'), findsNothing);
     expect(find.text('Share image'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('deleting from the details removes the workout', (tester) async {
+  testWidgetsThenUnmount('deleting from the details removes the workout', (
+    tester,
+  ) async {
     await logFinishedSquat();
     await pumpApp(tester);
     await tester.tap(find.text('Squat'));
@@ -152,11 +163,9 @@ void main() {
     expect(find.text('No workouts'), findsOneWidget);
     expect(await database.select(database.workoutSessions).get(), isEmpty);
     expect(await database.select(database.exerciseSets).get(), isEmpty);
-
-    await unmountApp(tester);
   });
 
-  testWidgets(
+  testWidgetsThenUnmount(
     'logs a past workout on an earlier day',
     (tester) async {
       await pumpApp(tester);
@@ -181,13 +190,11 @@ void main() {
       final now = DateTime.now();
       expect(session.startedAt, DateTime(now.year, now.month, 1, 18));
       expect(find.text('Squat'), findsOneWidget);
-
-      await unmountApp(tester);
     },
     skip: DateTime.now().day == 1,
   );
 
-  testWidgets(
+  testWidgetsThenUnmount(
     'leaving a past workout with nothing logged removes it',
     (tester) async {
       await pumpApp(tester);
@@ -203,13 +210,13 @@ void main() {
 
       expect(await database.select(database.workoutSessions).get(), isEmpty);
       expect(find.text('No workouts'), findsOneWidget);
-
-      await unmountApp(tester);
     },
     skip: DateTime.now().day == 1,
   );
 
-  testWidgets('a future day offers no workout button', (tester) async {
+  testWidgetsThenUnmount('a future day offers no workout button', (
+    tester,
+  ) async {
     await pumpApp(tester);
 
     await tester.tap(find.byIcon(Icons.chevron_right).first);
@@ -218,11 +225,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(FloatingActionButton), findsNothing);
-
-    await unmountApp(tester);
   });
 
-  testWidgets(
+  testWidgetsThenUnmount(
     'a past day offers logging even while a workout runs',
     (tester) async {
       await sessions.startSession();
@@ -234,40 +239,39 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Log workout'), findsOneWidget);
-
-      await unmountApp(tester);
     },
     skip: DateTime.now().day == 1,
   );
 
-  testWidgets('the year view sums the year and opens a tapped month', (
-    tester,
-  ) async {
-    final year = DateTime.now().year;
-    await sessions.logPastSession(DateTime(year, 1, 5));
-    await sessions.logPastSession(DateTime(year, 1, 6));
-    await pumpApp(tester);
+  testWidgetsThenUnmount(
+    'the year view sums the year and opens a tapped month',
+    (
+      tester,
+    ) async {
+      final year = DateTime.now().year;
+      await sessions.logPastSession(DateTime(year, 1, 5));
+      await sessions.logPastSession(DateTime(year, 1, 6));
+      await pumpApp(tester);
 
-    await tester.tap(find.text('Year'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Year'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('$year'), findsOneWidget);
-    expect(find.text('workouts'), findsOneWidget);
-    expect(find.text('2 h'), findsOneWidget);
-    expect(find.text('Start workout'), findsNothing);
+      expect(find.text('$year'), findsOneWidget);
+      expect(find.text('workouts'), findsOneWidget);
+      expect(find.text('2 h'), findsOneWidget);
+      expect(find.text('Start workout'), findsNothing);
 
-    await tester.tap(find.byTooltip('Previous year'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Previous year'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('No workouts in ${year - 1}'), findsOneWidget);
+      expect(find.text('No workouts in ${year - 1}'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Next year'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Jan'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Next year'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Jan'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('January $year'), findsOneWidget);
-
-    await unmountApp(tester);
-  });
+      expect(find.text('January $year'), findsOneWidget);
+    },
+  );
 }

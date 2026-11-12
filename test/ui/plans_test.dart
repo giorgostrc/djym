@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/test_widgets_then_unmount.dart';
+
 void main() {
   late AppDatabase database;
   late int squat;
@@ -54,11 +56,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> unmountApp(WidgetTester tester) async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(Duration.zero);
-  }
-
   Future<int> savePushDay() => PlanRepository(database).savePlan(
     name: 'Push day',
     items: [
@@ -67,7 +64,7 @@ void main() {
     ],
   );
 
-  testWidgets('creates a plan with exercises and target sets', (
+  testWidgetsThenUnmount('creates a plan with exercises and target sets', (
     tester,
   ) async {
     await openPlans(tester);
@@ -91,11 +88,9 @@ void main() {
 
     expect(find.text('Legs'), findsOneWidget);
     expect(find.text('1 exercise · 4 sets'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('starting a plan fills the workout with its sets', (
+  testWidgetsThenUnmount('starting a plan fills the workout with its sets', (
     tester,
   ) async {
     await savePushDay();
@@ -107,11 +102,9 @@ void main() {
     expect(find.text('Bench press'), findsOneWidget);
     expect(find.text('3 sets'), findsOneWidget);
     expect(find.text('2 sets'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('a plan cannot start while another workout runs', (
+  testWidgetsThenUnmount('a plan cannot start while another workout runs', (
     tester,
   ) async {
     await savePushDay();
@@ -130,11 +123,9 @@ void main() {
       await database.select(database.workoutSessions).get(),
       hasLength(1),
     );
-
-    await unmountApp(tester);
   });
 
-  testWidgets('the calendar offers plans when starting a workout', (
+  testWidgetsThenUnmount('the calendar offers plans when starting a workout', (
     tester,
   ) async {
     await savePushDay();
@@ -151,11 +142,11 @@ void main() {
     final session = await database.select(database.workoutSessions).getSingle();
     expect(session.planId, isNotNull);
     expect(find.text('Squat'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('deleting a plan from the editor removes it', (tester) async {
+  testWidgetsThenUnmount('deleting a plan from the editor removes it', (
+    tester,
+  ) async {
     await savePushDay();
     await openPlans(tester);
 
@@ -169,7 +160,5 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No workout plans yet'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 }

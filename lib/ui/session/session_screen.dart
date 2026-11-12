@@ -15,6 +15,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+/// How long a running workout goes before it is probably forgotten.
+const _forgottenAfter = Duration(hours: 4);
+
 class SessionScreen extends ConsumerStatefulWidget {
   const SessionScreen({
     required this.sessionId,
@@ -44,12 +47,60 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
     }
   });
 
+  var _finishing = false;
+
   @override
   void initState() {
     super.initState();
-    if (widget.pickExercisesOnOpen) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _addExercises());
-    }
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => widget.pickExercisesOnOpen ? _addExercises() : _askIfForgotten(),
+    );
+  }
+
+  /// A workout left running for hours most likely ended at its last ticked
+  /// set, so finishing it there keeps its duration honest.
+  Future<void> _askIfForgotten() async {
+    final session = await ref.read(sessionProvider(widget.sessionId).future);
+    if (session == null || session.finishedAt != null) return;
+    final running = DateTime.now().difference(session.startedAt);
+    if (running < _forgottenAfter) return;
+
+    final exercises = await ref.read(
+      sessionExercisesProvider(widget.sessionId).future,
+    );
+    final tickedAt = [
+      for (final entry in exercises)
+        for (final set in entry.sets) ?set.completedAt,
+    ]..sort();
+    final lastTickedAt = tickedAt.lastOrNull;
+    final endsAt = lastTickedAt == null
+        ? ''
+        : ' Finishing ends it at your last ticked set.';
+    if (!mounted) return;
+
+    final finish = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Still working out?'),
+        content: Text(
+          'This workout started ${running.inHours} hours ago.$endsAt',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep going'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Finish'),
+          ),
+        ],
+      ),
+    );
+    if (!(finish ?? false) || !mounted) return;
+    final units =
+        ref.read(settingsProvider).value?.unitSystem ?? UnitSystem.metric;
+    await _finish(exercises, units, finishedAt: lastTickedAt);
   }
 
   Future<void> _addExercises() async {
@@ -71,8 +122,9 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
 
   Future<void> _finish(
     List<SessionExercise> exercises,
-    UnitSystem units,
-  ) async {
+    UnitSystem units, {
+    DateTime? finishedAt,
+  }) async {
     final logged = exercises.any(
       (entry) => entry.sets.any((set) => set.hasValues),
     );
@@ -84,8 +136,12 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
       );
     }
 
+    setState(() => _finishing = true);
     await ref.read(restTimerProvider.notifier).skipFor(widget.sessionId);
-    final summary = await _repository.finishSession(widget.sessionId);
+    final summary = await _repository.finishSession(
+      widget.sessionId,
+      finishedAt: finishedAt,
+    );
     if (!mounted) return;
     await showModalBottomSheet<void>(
       context: context,
@@ -129,7 +185,17 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final session = ref.watch(sessionProvider(widget.sessionId)).value;
+    final sessionState = ref.watch(sessionProvider(widget.sessionId));
+    if (sessionState case AsyncData(value: null)) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: const PlaceholderBody(
+          icon: Icons.event_busy,
+          message: 'This workout no longer exists',
+        ),
+      );
+    }
+    final session = sessionState.value;
     final exercises = ref
         .watch(sessionExercisesProvider(widget.sessionId))
         .value;
@@ -163,7 +229,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen> {
               TextButton(onPressed: context.pop, child: const Text('Done'))
             else
               TextButton(
-                onPressed: () => _finish(exercises, units),
+                onPressed: _finishing ? null : () => _finish(exercises, units),
                 child: const Text('Finish'),
               ),
             PopupMenuButton<void>(

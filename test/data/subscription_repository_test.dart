@@ -141,6 +141,32 @@ void main() {
     expect(featuredSubscriptions([old], today), isEmpty);
   });
 
+  test('moving the period relinks the workouts it covers', () async {
+    await save('City Gym', DateTime(2026, 10), 1);
+    await save('Pool', DateTime(2026, 9), 1);
+    await sessions.logPastSession(DateTime(2026, 9, 20));
+    await sessions.logPastSession(DateTime(2026, 10, 10));
+    final [city, pool] = await subscriptions.loadSubscriptions();
+    expect([city.sessionCount, pool.sessionCount], [1, 1]);
+
+    await subscriptions.saveSubscription(
+      id: city.subscription.id,
+      title: 'City Gym',
+      costCents: 6000,
+      period: SubscriptionPeriod.months(DateTime(2026, 11), 1),
+    );
+    await subscriptions.saveSubscription(
+      id: pool.subscription.id,
+      title: 'Pool',
+      costCents: 6000,
+      period: SubscriptionPeriod(DateTime(2026, 9), DateTime(2026, 10, 31)),
+    );
+
+    final [movedCity, longerPool] = await subscriptions.loadSubscriptions();
+    expect(movedCity.sessionCount, 0);
+    expect(longerPool.sessionCount, 2);
+  });
+
   test('editing keeps the id', () async {
     await save('City Gym', DateTime(2026, 10), 1);
     final [city] = await subscriptions.loadSubscriptions();

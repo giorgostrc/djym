@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:djym/data/database/app_database.dart';
+import 'package:djym/data/repositories/exercise_history_repository.dart';
 import 'package:djym/data/repositories/exercise_repository.dart';
 import 'package:djym/data/services/ai_client.dart';
 import 'package:djym/data/services/exercise_autofill.dart';
@@ -66,6 +67,7 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
     for (final muscle in widget.existing?.muscles ?? <Muscle>[]) muscle.id,
   ];
   var _dirty = false;
+  var _saving = false;
 
   late String _suggestionTerm = (widget.initialTitle ?? '').trim();
   Timer? _suggestionDebounce;
@@ -263,9 +265,11 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
     }
   }
 
+  /// Waits for a wger photo still downloading, so saving can take a while.
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
+    setState(() => _saving = true);
     final guidance = _formGuidance.text.trim();
     final thumbnail = await _thumbnail;
     final id = await ref
@@ -276,7 +280,6 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
           trackingType: _trackingType,
           formGuidance: guidance.isEmpty ? null : guidance,
           muscleIds: _muscleIds,
-          externalId: _prefill?.externalId,
           thumbnail: thumbnail,
         );
     if (mounted) context.pop(id);
@@ -313,6 +316,46 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
     if ((discard ?? false) && mounted) context.pop();
   }
 
+  /// Logged sets stay as recorded but show only the fields of the new type,
+  /// so moving away from the saved type of an exercise with history asks
+  /// first.
+  Future<void> _selectTrackingType(
+    TrackingType type, {
+    required bool hasHistory,
+  }) async {
+    final savedType = widget.existing?.exercise.trackingType;
+    final leavingSavedType = _trackingType == savedType && type != savedType;
+    if (leavingSavedType && hasHistory && !await _confirmTrackingChange()) {
+      return;
+    }
+    _trackingType = type;
+    _markDirty();
+  }
+
+  Future<bool> _confirmTrackingChange() async {
+    final change = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Change tracking?'),
+        content: const Text(
+          'Sets you already logged keep their values, but history, bests '
+          'and charts will show only what the new tracking records.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep it'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Change'),
+          ),
+        ],
+      ),
+    );
+    return change ?? false;
+  }
+
   void _toggleMuscle(int muscleId) {
     _muscleIds.contains(muscleId)
         ? _muscleIds.remove(muscleId)
@@ -325,6 +368,16 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
     final muscles = ref.watch(musclesProvider).value ?? const [];
     final aiClient = ref.watch(aiClientProvider);
     final textTheme = Theme.of(context).textTheme;
+    final hasHistory = switch (widget.existing) {
+      final existing? =>
+        ref
+                .watch(exerciseHistoryProvider(existing.exercise.id))
+                .value
+                ?.workouts
+                .isNotEmpty ??
+            false,
+      null => false,
+    };
 
     return PopScope(
       canPop: !_dirty,
@@ -343,7 +396,15 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
                 icon: const Icon(Icons.delete_outline),
                 onPressed: _delete,
               ),
-            TextButton(onPressed: _save, child: const Text('Save')),
+            TextButton(
+              onPressed: _saving ? null : _save,
+              child: _saving
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Save'),
+            ),
           ],
         ),
         body: Form(
@@ -408,10 +469,8 @@ class _ExerciseFormState extends ConsumerState<_ExerciseForm> {
                       label: Text(type.label),
                       selected: type == _trackingType,
                       showCheckmark: false,
-                      onSelected: (_) {
-                        _trackingType = type;
-                        _markDirty();
-                      },
+                      onSelected: (_) =>
+                          _selectTrackingType(type, hasHistory: hasHistory),
                     ),
                 ],
               ),

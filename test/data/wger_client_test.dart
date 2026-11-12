@@ -69,7 +69,6 @@ void main() {
       'https://wger.de/media/exercise-images/192/Bench-press-1.png.200x200_q85.png',
     );
     expect(isometric.thumbnailUrl, isNull);
-    expect(bench.externalId, startsWith('wger:'));
   });
 
   test('throws when wger does not answer with 200', () async {

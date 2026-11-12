@@ -13,6 +13,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
+import '../helpers/test_widgets_then_unmount.dart';
+
 void main() {
   late AppDatabase database;
   late ExerciseRepository repository;
@@ -43,18 +45,13 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> unmountApp(WidgetTester tester) async {
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(Duration.zero);
-  }
-
   Future<int> addExercise(String title) => repository.saveExercise(
     title: title,
     trackingType: TrackingType.weightReps,
     muscleIds: const [],
   );
 
-  testWidgets('creates the first exercise from the empty state', (
+  testWidgetsThenUnmount('creates the first exercise from the empty state', (
     tester,
   ) async {
     await openExercisesTab(tester);
@@ -70,11 +67,11 @@ void main() {
     expect(find.byType(ExercisesScreen), findsOneWidget);
     expect(find.text('Dips'), findsOneWidget);
     expect(find.text('Triceps, Chest'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('asks before discarding unsaved changes', (tester) async {
+  testWidgetsThenUnmount('asks before discarding unsaved changes', (
+    tester,
+  ) async {
     await openExercisesTab(tester);
 
     await tester.tap(find.text('Create your first exercise'));
@@ -90,11 +87,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('No exercises yet'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('swipe deletes an exercise and undo brings it back', (
+  testWidgetsThenUnmount('swipe deletes an exercise and undo brings it back', (
     tester,
   ) async {
     await addExercise('Dips');
@@ -109,11 +104,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Dips'), findsOneWidget);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('search narrows the list', (tester) async {
+  testWidgetsThenUnmount('search narrows the list', (tester) async {
     await addExercise('Dips');
     await addExercise('Squat');
     await openExercisesTab(tester);
@@ -123,40 +116,39 @@ void main() {
 
     expect(find.text('Squat'), findsOneWidget);
     expect(find.text('Dips'), findsNothing);
-
-    await unmountApp(tester);
   });
 
-  testWidgets('picker returns exercises in selection order and creates '
-      'missing ones inline', (tester) async {
-    final dipsId = await addExercise('Dips');
-    final squatId = await addExercise('Squat');
-    await openExercisesTab(tester);
+  testWidgetsThenUnmount(
+    'picker returns exercises in selection order and creates '
+    'missing ones inline',
+    (tester) async {
+      final dipsId = await addExercise('Dips');
+      final squatId = await addExercise('Squat');
+      await openExercisesTab(tester);
 
-    final picked = showExercisePicker(
-      tester.element(find.byType(ExercisesScreen)),
-    );
-    await tester.pumpAndSettle();
+      final picked = showExercisePicker(
+        tester.element(find.byType(ExercisesScreen)),
+      );
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Squat').last);
-    await tester.tap(find.text('Dips').last);
-    await tester.enterText(find.byType(TextField).first, 'Plank');
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Create "Plank"'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Squat').last);
+      await tester.tap(find.text('Dips').last);
+      await tester.enterText(find.byType(TextField).first, 'Plank');
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Create "Plank"'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('New exercise'), findsOneWidget);
+      expect(find.text('New exercise'), findsOneWidget);
 
-    await tester.tap(find.text('Save'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Add 3'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add 3'));
+      await tester.pumpAndSettle();
 
-    final plank = await (database.select(
-      database.exercises,
-    )..where((exercise) => exercise.title.equals('Plank'))).getSingle();
-    expect(await picked, [squatId, dipsId, plank.id]);
-
-    await unmountApp(tester);
-  });
+      final plank = await (database.select(
+        database.exercises,
+      )..where((exercise) => exercise.title.equals('Plank'))).getSingle();
+      expect(await picked, [squatId, dipsId, plank.id]);
+    },
+  );
 }

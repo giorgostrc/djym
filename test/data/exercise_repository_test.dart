@@ -124,18 +124,16 @@ void main() {
     },
   );
 
-  test('keeps the wger link on edit and can remove the thumbnail', () async {
-    await repository.saveExercise(
+  test('editing can remove the thumbnail', () async {
+    final id = await repository.saveExercise(
       title: 'Bench Press',
       trackingType: TrackingType.weightReps,
       muscleIds: [muscleIds['Chest']!],
-      externalId: 'wger:bench-uuid',
       thumbnail: Uint8List.fromList([1, 2, 3]),
     );
-    final [bench] = await repository.watchExercises().first;
 
     await repository.saveExercise(
-      id: bench.exercise.id,
+      id: id,
       title: 'Bench press',
       trackingType: TrackingType.weightReps,
       muscleIds: [muscleIds['Chest']!],
@@ -143,34 +141,7 @@ void main() {
     final [edited] = await repository.watchExercises().first;
 
     expect(edited.exercise.title, 'Bench press');
-    expect(edited.exercise.externalId, 'wger:bench-uuid');
-    expect(await repository.thumbnail(edited.exercise.id), isNull);
-  });
-
-  test('saving an archived wger exercise again restores it', () async {
-    Future<int> saveBench() => repository.saveExercise(
-      title: 'Bench Press',
-      trackingType: TrackingType.weightReps,
-      muscleIds: [muscleIds['Chest']!],
-      externalId: 'wger:bench-uuid',
-    );
-    final id = await saveBench();
-    await database
-        .into(database.planExercises)
-        .insert(
-          PlanExercisesCompanion.insert(
-            planId: await database
-                .into(database.workoutPlans)
-                .insert(WorkoutPlansCompanion.insert(name: 'Push')),
-            exerciseId: id,
-            position: 0,
-            targetSets: 3,
-          ),
-        );
-    await repository.removeExercise(id);
-
-    expect(await saveBench(), id);
-    expect(await exerciseTitles(), ['Bench Press']);
+    expect(await repository.thumbnail(id), isNull);
   });
 
   test('deleting drops the photo and undo puts it back', () async {

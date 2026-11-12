@@ -1,3 +1,4 @@
+import 'package:djym/data/database/app_database.steps.dart';
 import 'package:djym/data/database/tables.dart';
 import 'package:djym/domain/theme_preference.dart';
 import 'package:djym/domain/tracking_type.dart';
@@ -40,7 +41,7 @@ const _muscleNames = [
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
-  static const currentSchemaVersion = 1;
+  static const currentSchemaVersion = 2;
 
   @override
   int get schemaVersion => currentSchemaVersion;
@@ -52,6 +53,19 @@ class AppDatabase extends _$AppDatabase {
       await into(settingsTable).insert(const SettingsTableCompanion());
       await _seedMuscles();
     },
+    onUpgrade: stepByStep(
+      from1To2: (m, schema) async {
+        // SQLite cannot drop a UNIQUE column, so the table is rebuilt.
+        await m.alterTable(TableMigration(schema.exercises));
+        // Local midnights such as 2026-10-01T00:00:00.000+03:00 keep only
+        // the day they were written on.
+        await customStatement(
+          'UPDATE gym_subscriptions '
+          'SET start_date = substr(start_date, 1, 10), '
+          'end_date = substr(end_date, 1, 10)',
+        );
+      },
+    ),
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },

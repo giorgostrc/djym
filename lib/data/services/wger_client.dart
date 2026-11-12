@@ -29,7 +29,6 @@ const _localMuscleByWgerId = {
 
 class WgerExercise {
   const WgerExercise({
-    required this.uuid,
     required this.name,
     required this.muscleNames,
     this.description,
@@ -52,7 +51,6 @@ class WgerExercise {
     ].cast<Map<String, dynamic>>();
 
     return WgerExercise(
-      uuid: json['uuid'] as String,
       name: (english['name'] as String).trim(),
       description: _plainText(english['description'] as String),
       muscleNames: {
@@ -63,13 +61,10 @@ class WgerExercise {
     );
   }
 
-  final String uuid;
   final String name;
   final String? description;
   final List<String> muscleNames;
   final String? thumbnailUrl;
-
-  String get externalId => 'wger:$uuid';
 }
 
 class WgerClient {

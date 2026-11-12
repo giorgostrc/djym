@@ -1,4 +1,3 @@
-import 'package:djym/data/repositories/exercise_repository.dart';
 import 'package:djym/data/services/wger_client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,11 +25,6 @@ class WgerSuggestions extends ConsumerWidget {
 
     final textTheme = Theme.of(context).textTheme;
     final quiet = TextStyle(color: Theme.of(context).colorScheme.outline);
-    final inLibrary = {
-      for (final entry
-          in ref.watch(exercisesProvider).value ?? <ExerciseWithMuscles>[])
-        entry.exercise.externalId,
-    };
 
     return switch (ref.watch(wgerSearchProvider(term))) {
       AsyncData(value: []) => const SizedBox.shrink(),
@@ -55,7 +49,6 @@ class WgerSuggestions extends ConsumerWidget {
                 itemCount: value.length,
                 itemBuilder: (context, index) => _SuggestionTile(
                   suggestion: value[index],
-                  inLibrary: inLibrary.contains(value[index].externalId),
                   onTap: () => onSelected(value[index]),
                 ),
               ),
@@ -79,26 +72,19 @@ class WgerSuggestions extends ConsumerWidget {
 }
 
 class _SuggestionTile extends StatelessWidget {
-  const _SuggestionTile({
-    required this.suggestion,
-    required this.inLibrary,
-    required this.onTap,
-  });
+  const _SuggestionTile({required this.suggestion, required this.onTap});
 
   final WgerExercise suggestion;
-  final bool inLibrary;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      enabled: !inLibrary,
       leading: WgerThumbnail(suggestion.thumbnailUrl),
       title: Text(suggestion.name),
       subtitle: suggestion.muscleNames.isEmpty
           ? null
           : Text(suggestion.muscleNames.join(', ')),
-      trailing: inLibrary ? const Text('In library') : null,
       onTap: onTap,
     );
   }

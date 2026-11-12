@@ -280,18 +280,20 @@ class WorkoutSessionRepository {
         }
       });
 
-  Future<void> addSet(int sessionId, int exerciseId) async {
-    final position = await _nextPosition(sessionId);
-    await _database
-        .into(_sets)
-        .insert(
-          ExerciseSetsCompanion.insert(
-            sessionId: sessionId,
-            exerciseId: exerciseId,
-            position: position,
-          ),
-        );
-  }
+  /// In a transaction so quick repeated adds never share a position.
+  Future<void> addSet(int sessionId, int exerciseId) =>
+      _database.transaction(() async {
+        final position = await _nextPosition(sessionId);
+        await _database
+            .into(_sets)
+            .insert(
+              ExerciseSetsCompanion.insert(
+                sessionId: sessionId,
+                exerciseId: exerciseId,
+                position: position,
+              ),
+            );
+      });
 
   Future<void> updateSet(int setId, ExerciseSetsCompanion changes) =>
       (_database.update(_sets)..where((set) => set.id.equals(setId))).write(
@@ -362,30 +364,35 @@ class WorkoutSessionRepository {
     );
   }
 
-  /// Drops sets without values and closes the session.
-  Future<SessionSummary> finishSession(int sessionId) =>
-      _database.transaction(() async {
-        final exercises = _groupByExercise(
-          await _sessionExercisesQuery(sessionId).get(),
+  /// Drops sets without values and closes the session at [finishedAt],
+  /// which defaults to now.
+  Future<SessionSummary> finishSession(
+    int sessionId, {
+    DateTime? finishedAt,
+  }) => _database.transaction(() async {
+    final exercises = _groupByExercise(
+      await _sessionExercisesQuery(sessionId).get(),
+    );
+    await deleteSets([
+      for (final entry in exercises)
+        for (final set in entry.sets)
+          if (!set.hasValues) set,
+    ]);
+
+    final [session] =
+        await (_database.update(
+          _sessions,
+        )..where((s) => s.id.equals(sessionId))).writeReturning(
+          WorkoutSessionsCompanion(
+            finishedAt: Value(finishedAt ?? DateTime.now()),
+          ),
         );
-        await deleteSets([
-          for (final entry in exercises)
-            for (final set in entry.sets)
-              if (!set.hasValues) set,
-        ]);
+    await SubscriptionRepository(
+      _database,
+    ).linkToLikelySubscription(session);
 
-        final [session] =
-            await (_database.update(
-              _sessions,
-            )..where((s) => s.id.equals(sessionId))).writeReturning(
-              WorkoutSessionsCompanion(finishedAt: Value(DateTime.now())),
-            );
-        await SubscriptionRepository(
-          _database,
-        ).linkToLikelySubscription(session);
-
-        return SessionSummary.of(session, exercises);
-      });
+    return SessionSummary.of(session, exercises);
+  });
 
   Future<void> deleteSession(int sessionId) =>
       (_database.delete(_sessions)..where((s) => s.id.equals(sessionId))).go();
